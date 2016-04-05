@@ -152,6 +152,11 @@ Player.prototype.steer = function() {
         var openTiles = getOpenTiles(this.tile, this.dirEnum);
         this.setTarget();
         this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
+
+        var nextDirOpen = isNextTileFloor(this.tile, this.nextDir);
+        if (nextDirOpen) {
+            this.setDir(this.nextDirEnum);
+        }
     }
     else {
         this.targetting = undefined;
