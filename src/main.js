@@ -20,7 +20,9 @@ window.addEventListener("load", function() {
 		}
 	}
 	else {
-		switchState(homeState);
+		gameMode = GAME_MSPACMAN;
+		practiceMode = true;
+		switchState(newGameState);
 	}
     executive.init();
 });
