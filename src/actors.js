@@ -29,6 +29,7 @@ var pacman = new Player();
 pacman.name = "pacman";
 pacman.color = "#FFFF00";
 pacman.pathColor = "rgba(255,255,0,0.8)";
+pacman.isDrawTarget = true;
 
 // order at which they appear in original arcade memory
 // (suggests drawing/update order)

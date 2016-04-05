@@ -138,11 +138,12 @@ var clearCheats, backupCheats, restoreCheats;
 (function(){
     clearCheats = function() {
         pacman.invincible = false;
-        pacman.ai = false;
+        pacman.ai = true;
         for (i=0; i<5; i++) {
             actors[i].isDrawPath = false;
             actors[i].isDrawTarget = false;
         }
+        pacman.isDrawTarget = true;
         executive.setUpdatesPerSecond(60);
     };
 

@@ -119,8 +119,8 @@ var executive = (function(){
         },
         init: function() {
             var that = this;
-            window.addEventListener('focus', function() {that.start();});
-            window.addEventListener('blur', function() {that.stop();});
+            //window.addEventListener('focus', function() {that.start();});
+            //window.addEventListener('blur', function() {that.stop();});
             this.start();
         },
         start: function() {

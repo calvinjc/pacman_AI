@@ -13,7 +13,7 @@ var Player = function() {
     this.nextDir = {};
 
     // determines if this player should be AI controlled
-    this.ai = false;
+    this.ai = true;
     this.invincible = false;
 
     this.savedNextDirEnum = {};
