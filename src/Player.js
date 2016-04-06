@@ -179,6 +179,78 @@ var setFleeFromTarget = function() {
         shortestDistance = pinkyDistance;
     }
 };
+
+var tileContainsGhost = function(tile) {
+    if (blinky.tile.x === tile.x && blinky.tile.y === tile.y) return true;
+    if (pinky.tile.x === tile.x && pinky.tile.y === tile.y) return true;
+    if (inky.tile.x === tile.x && inky.tile.y === tile.y) return true;
+    if (clyde.tile.x === tile.x && clyde.tile.y === tile.y) return true;
+};
+
+var roadIsClearFor3Tiles = function(tile, direction, upToThree) {
+    var nextTile1 = { x: tile.x + direction.x, y: tile.y + direction.y};
+    var nextTile2 = { x: tile.x + (2*direction.x), y: tile.y + (2*direction.y)};
+    var nextTile3 = { x: tile.x + (3*direction.x), y: tile.y + (3*direction.y)};
+
+    if (!map.isFloorTile(nextTile1.x, nextTile1.y))
+        return upToThree;
+    if (tileContainsGhost(nextTile1)) {
+        return false;
+    }
+    if (!map.isFloorTile(nextTile2.x, nextTile2.y))
+        return upToThree;
+    if (tileContainsGhost(nextTile2)) {
+        return false;
+    }
+    if (!map.isFloorTile(nextTile3.x, nextTile3.y))
+        return upToThree;
+    if (tileContainsGhost(nextTile3)) {
+        return false;
+    }
+
+    return true;
+};
+
+var isThereAClearPathAnyDirection = function(tile) {
+    for (var dirEnum = 0; dirEnum < 4; dirEnum++) {
+        var direction = {};
+        setDirFromEnum(direction, dirEnum);
+        if (roadIsClearFor3Tiles(tile, direction, false)) {
+            return dirEnum;
+        }
+    }
+    return -1;
+};
+
+var pathContainsEnergizer = function(tile, direction) {
+    var nextTile1 = { x: tile.x + direction.x, y: tile.y + direction.y};
+    var nextTile2 = { x: tile.x + (2*direction.x), y: tile.y + (2*direction.y)};
+
+    if (!map.isFloorTile(nextTile1.x, nextTile1.y || tileContainsGhost(nextTile1)))
+        return false;
+    if (map.isEnergizerTile(nextTile1.x, nextTile1.y)) {
+        return true;
+    }
+    if (!map.isFloorTile(nextTile2.x, nextTile2.y) || tileContainsGhost(nextTile2))
+        return false;
+    if (map.isEnergizerTile(nextTile2.x, nextTile2.y)) {
+        return true;
+    }
+
+    return false;
+};
+
+var isThereAnEnergizerAnyDirection = function(tile) {
+    for (var dirEnum = 0; dirEnum < 4; dirEnum++) {
+        var direction = {};
+        setDirFromEnum(direction, dirEnum);
+        if (pathContainsEnergizer(tile, direction)) {
+            return dirEnum;
+        }
+    }
+    return -1;
+};
+
 var findNearestDot = function(tile) {
     for (var index = 0; index < mapHeight_Tile; index++)
     {
@@ -233,6 +305,19 @@ Player.prototype.steer = function() {
 
         if (this.targetting) {
             this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
+
+            if (shortestDistance < 30 && this.targetting === 'flee') {
+                var energizerDirection = isThereAnEnergizerAnyDirection(this.tile);
+                if (energizerDirection > -1) {
+                    this.setNextDir(energizerDirection);
+                }
+                else if (!roadIsClearFor3Tiles(this.tile, this.nextDir, true)) {
+                    var newPlan = isThereAClearPathAnyDirection(this.tile);
+                    if (newPlan > -1) {
+                        this.setNextDir(newPlan);
+                    }
+                }
+            }
         }
 
         var nextDirOpen = isNextTileFloor(this.tile, this.nextDir);
