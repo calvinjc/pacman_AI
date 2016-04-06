@@ -222,6 +222,39 @@ var isThereAClearPathAnyDirection = function(tile) {
     return -1;
 };
 
+var openPathDistance = function(tile, direction) {
+    var count = 1;
+    var nextTile = { x: tile.x + (count*direction.x), y: tile.y + (count*direction.y)};
+
+    while (count < 20 && map.isFloorTile(nextTile.x, nextTile.y)
+    && !map.isTunnelTile(nextTile.x, nextTile.y)) {
+        if (tileContainsGhost(nextTile)) {
+            return 0;
+        }
+        count++;
+        nextTile = { x: tile.x + (count*direction.x), y: tile.y + (count*direction.y)};
+    }
+
+    return count;
+};
+
+var longestFreePath = function(tile, openDirEnums) {
+    if (!openDirEnums) openDirEnums = [0,1,2,3];
+    var bestDistance = 0;
+    var bestDistanceEnum = -1;
+    for (var x = 0; x < openDirEnums.length; x++) {
+        var dirEnum = openDirEnums[x];
+        var direction = {};
+        setDirFromEnum(direction, dirEnum);
+        var newDistance = openPathDistance(tile, direction);
+        if (newDistance > bestDistance && newDistance > 1) {
+            bestDistance = newDistance;
+            bestDistanceEnum = dirEnum;
+        }
+    }
+    return bestDistanceEnum;
+};
+
 var pathContainsEnergizer = function(tile, direction) {
     var nextTile1 = { x: tile.x + direction.x, y: tile.y + direction.y};
     var nextTile2 = { x: tile.x + (2*direction.x), y: tile.y + (2*direction.y)};
@@ -305,16 +338,18 @@ Player.prototype.steer = function() {
 
         if (this.targetting) {
             this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
-
+            
             if (shortestDistance < 30 && this.targetting === 'flee') {
-                var energizerDirection = isThereAnEnergizerAnyDirection(this.tile);
-                if (energizerDirection > -1) {
-                    this.setNextDir(energizerDirection);
+                var openDirEnums = [];
+                for (var x = 0; x < 4; x++) {
+                    if (openTiles[x]) {
+                        openDirEnums.push(x);
+                    }
                 }
-                else if (!roadIsClearFor3Tiles(this.tile, this.nextDir, true)) {
-                    var newPlan = isThereAClearPathAnyDirection(this.tile);
-                    if (newPlan > -1) {
-                        this.setNextDir(newPlan);
+                if (openDirEnums.length > 1) {
+                    var bestDirEnum = longestFreePath(this.tile);
+                    if (bestDirEnum !== -1) {
+                        this.setNextDir(bestDirEnum);
                     }
                 }
             }
