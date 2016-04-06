@@ -140,18 +140,68 @@ Player.prototype.step = (function(){
     };
 })();
 
+var sortedDistances = [];
+var shortestDistance = 500;
+
+var setFleeFromTarget = function() {
+    var blinkyDistanceX = pacman.tile.x - blinky.tile.x;
+    var blinkyDistanceY = pacman.tile.y - blinky.tile.y;
+    var blinkyDistance = blinkyDistanceX * blinkyDistanceX + blinkyDistanceY * blinkyDistanceY;
+
+    var pinkyDistanceX = pacman.tile.x - pinky.tile.x;
+    var pinkyDistanceY = pacman.tile.y - pinky.tile.y;
+    var pinkyDistance = pinkyDistanceX * pinkyDistanceX + pinkyDistanceY * pinkyDistanceY;
+
+    var inkyDistanceX = pacman.tile.x - inky.tile.x;
+    var inkyDistanceY = pacman.tile.y - inky.tile.y;
+    var inkyDistance = inkyDistanceX * inkyDistanceX + inkyDistanceY * inkyDistanceY;
+
+    var clydeDistanceX = pacman.tile.x - clyde.tile.x;
+    var clydeDistanceY = pacman.tile.y - clyde.tile.y;
+    var clydeDistance = clydeDistanceX * clydeDistanceX + clydeDistanceY * clydeDistanceY;
+
+    var arrayDistances = [
+        {name: blinky.name, distance: blinkyDistance, actor: blinky, mode: blinky.mode},
+        {name: pinky.name, distance: pinkyDistance, actor: pinky, mode: pinky.mode},
+        {name: inky.name, distance: inkyDistance, actor: inky, mode: inky.mode},
+        {name: clyde.name, distance: clydeDistance, actor: clyde, mode: clyde.mode},
+    ];
+
+    sortedDistances = _.sortBy(arrayDistances, 'distance');
+    sortedDistances = _.filter(sortedDistances, function(obj) { return obj.mode === GHOST_OUTSIDE || obj.mode === GHOST_LEAVING_HOME});
+
+    if (sortedDistances[0]) {
+        pacman.fleeFrom = sortedDistances[0].actor;
+        shortestDistance = sortedDistances[0].distance;
+    }
+    else {
+        pacman.fleeFrom = pinky
+        shortestDistance = pinkyDistance;
+    }
+};
+
 // determine direction
 Player.prototype.steer = function() {
 
     // if AI-controlled, only turn at mid-tile
     if (this.ai) {
-        if (this.distToMid.x != 0 || this.distToMid.y != 0)
-            return;
-
-        // make turn that is closest to target
+        setFleeFromTarget();
         var openTiles = getOpenTiles(this.tile, this.dirEnum);
-        this.setTarget();
-        this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
+
+        if (pacman.fleeFrom.scared) {
+            this.targetTile.x = pacman.fleeFrom.tile.x;
+            this.targetTile.y = pacman.fleeFrom.tile.y;
+            this.targetting = pacman.fleeFrom.name;
+        }
+        else {
+            this.targetting = 'flee';
+            this.targetTile.x = pacman.fleeFrom.tile.x + 2 * (pacman.tile.x - pacman.fleeFrom.tile.x);
+            this.targetTile.y = pacman.fleeFrom.tile.y + 2 * (pacman.tile.y - pacman.fleeFrom.tile.y);
+        }
+
+        if (this.targetting) {
+            this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
+        }
 
         var nextDirOpen = isNextTileFloor(this.tile, this.nextDir);
         if (nextDirOpen) {
@@ -162,6 +212,7 @@ Player.prototype.steer = function() {
         this.targetting = undefined;
     }
 
+    // manual input
     if (this.inputDirEnum == undefined) {
         if (this.stopped) {
             this.setDir(this.nextDirEnum);
