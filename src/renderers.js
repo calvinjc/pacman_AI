@@ -17,6 +17,8 @@ var mapPad = tileSize/8; // padding between the map and its clipping
 
 var mapWidth = 28*tileSize+mapPad*2;
 var mapHeight = 36*tileSize+mapPad*2;
+var mapWidth_Tile = 28;
+var mapHeight_Tile = 36;
 
 var screenWidth = mapWidth+mapMargin*2;
 var screenHeight = mapHeight+mapMargin*2;

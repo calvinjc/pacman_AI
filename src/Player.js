@@ -19,8 +19,6 @@ var Player = function() {
     this.savedNextDirEnum = {};
     this.savedStopped = {};
     this.savedEatPauseFramesLeft = {};
-
-    this.formerTile = { x:0, y:0 };
 };
 
 // inherit functions from Actor
@@ -181,7 +179,28 @@ var setFleeFromTarget = function() {
         shortestDistance = pinkyDistance;
     }
 };
-
+var findNearestDot = function(tile) {
+    for (var index = 0; index < mapHeight_Tile; index++)
+    {
+        // use y for outer loop so we prefer going up since we start at the bottom of the map
+        var indexY = tile.y - index; if (indexY < 0) indexY = 0;
+        var maxIndexY = tile.y + index; if (maxIndexY > mapHeight_Tile) maxIndexY = mapHeight_Tile;
+        for (; indexY < maxIndexY; indexY++)
+        {
+            // iterate over x from highest to lowest so we prefer to go right
+            // because at the beginning of levels ghosts always go left
+            var indexX = tile.x + index; if (indexX > mapWidth_Tile) indexX = mapWidth_Tile;
+            var minIndexX = tile.x - index; if (minIndexX < 0) minIndexX = 0;
+            for (; indexX > minIndexX; indexX--)
+            {
+                if (map.isDotTile(indexX, indexY)) {
+                    return {x: indexX, y: indexY};
+                }
+            }
+        }
+    }
+    return {x:0,y:0};
+};
 // determine direction
 Player.prototype.steer = function() {
 
@@ -189,7 +208,6 @@ Player.prototype.steer = function() {
     if (this.ai) {
         if (this.stopped) {
             this.stopped = false;
-            this.formerTile = {x: -1, y: -1};
         }
         
         setFleeFromTarget();
@@ -201,19 +219,10 @@ Player.prototype.steer = function() {
             this.targetting = pacman.fleeFrom.name;
         }
         else if (shortestDistance > 50) {
-            if (this.formerTile && (this.tile.x !== this.formerTile.x
-                || this.tile.y !== this.formerTile.y)) {
-
-                // choose a random turn
-                dirEnum = Math.floor(Math.random() * 5);
-                while (!openTiles[dirEnum] && dirEnum !== this.formerDirEnum) {
-                    dirEnum = (dirEnum + 1) % 4;
-                }
-
-                this.targetting = false;
-                this.setNextDir(dirEnum);
-                this.formerDirEnum = dirEnum;
-                this.formerTile = _.clone(this.tile);
+            if (this.targetting != "huntingdots" ||
+                (this.targetTile.x === this.tile.x && this.targetTile.y === this.tile.y)) {
+                this.targetTile = findNearestDot(this.tile);
+                this.targetting = "huntingdots";
             }
         }
         else {

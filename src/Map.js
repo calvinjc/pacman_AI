@@ -374,6 +374,26 @@ Map.prototype.isFloorTile = function(x,y) {
     return this.isFloorTileChar(this.getTile(x,y));
 };
 
+// determines if the given character is a dot tile
+Map.prototype.isDotTileChar = function(tile) {
+    return tile=='.';
+};
+
+// determines if the given tile coordinate is a dot tile
+Map.prototype.isDotTile = function(x,y) {
+    return this.isDotTileChar(this.getTile(x,y));
+};
+
+// determines if the given character is a Energizer tile
+Map.prototype.isEnergizerTileChar = function(tile) {
+    return tile=='o';
+};
+
+// determines if the given tile coordinate is an Energizer tile
+Map.prototype.isEnergizerTile = function(x,y) {
+    return this.isEnergizerTileChar(this.getTile(x,y));
+};
+
 // mark the dot at the given coordinate eaten
 Map.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;
