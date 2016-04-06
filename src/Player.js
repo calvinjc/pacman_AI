@@ -336,9 +336,22 @@ Player.prototype.steer = function() {
             this.targetTile.y = pacman.fleeFrom.tile.y + 2 * (pacman.tile.y - pacman.fleeFrom.tile.y);
         }
 
+        var fruitDistance = 99999;
+        if (fruit.isPresent()) {
+            var fruitTileX = Math.floor(fruit.pixel.x / tileSize);
+            var fruitTileY = Math.floor(fruit.pixel.y / tileSize);
+            var fruitDistanceX = pacman.tile.x - fruitTileX;
+            var fruitDistanceY = pacman.tile.y - fruitTileY;
+            fruitDistance = fruitDistanceX * fruitDistanceX + fruitDistanceY * fruitDistanceY;
+        }
+        if (fruitDistance < shortestDistance) {
+            this.targetTile = {x:fruitTileX, y: fruitTileY};
+            this.targetting = "huntingFruit";
+        }
+
         if (this.targetting) {
             this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
-            
+
             if (shortestDistance < 30 && this.targetting === 'flee') {
                 var openDirEnums = [];
                 for (var x = 0; x < 4; x++) {
