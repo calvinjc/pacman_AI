@@ -19,6 +19,8 @@ var Player = function() {
     this.savedNextDirEnum = {};
     this.savedStopped = {};
     this.savedEatPauseFramesLeft = {};
+
+    this.formerTile = { x:0, y:0 };
 };
 
 // inherit functions from Actor
@@ -185,6 +187,11 @@ Player.prototype.steer = function() {
 
     // if AI-controlled, only turn at mid-tile
     if (this.ai) {
+        if (this.stopped) {
+            this.stopped = false;
+            this.formerTile = {x: -1, y: -1};
+        }
+        
         setFleeFromTarget();
         var openTiles = getOpenTiles(this.tile, this.dirEnum);
 
@@ -192,6 +199,22 @@ Player.prototype.steer = function() {
             this.targetTile.x = pacman.fleeFrom.tile.x;
             this.targetTile.y = pacman.fleeFrom.tile.y;
             this.targetting = pacman.fleeFrom.name;
+        }
+        else if (shortestDistance > 50) {
+            if (this.formerTile && (this.tile.x !== this.formerTile.x
+                || this.tile.y !== this.formerTile.y)) {
+
+                // choose a random turn
+                dirEnum = Math.floor(Math.random() * 5);
+                while (!openTiles[dirEnum] && dirEnum !== this.formerDirEnum) {
+                    dirEnum = (dirEnum + 1) % 4;
+                }
+
+                this.targetting = false;
+                this.setNextDir(dirEnum);
+                this.formerDirEnum = dirEnum;
+                this.formerTile = _.clone(this.tile);
+            }
         }
         else {
             this.targetting = 'flee';
