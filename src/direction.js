@@ -67,6 +67,51 @@ var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
     return dirEnum;
 };
 
+var myGetTurnClosestToTarget = function(tile, targetTile) {
+    var minDistance = Infinity;
+    var minDepth = Infinity;
+    var bestDirEnum = 0;
+    var openDirEnums = getOpenDirEnums(tile, 0);
+    for (var index = 0; index < openDirEnums.length; index++) {
+        var dir = getDirFromEnum(openDirEnums[index]);
+        var nextTile = {x: tile.x + dir.x, y: tile.y + dir.y};
+        var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], 0);
+        if (option.distance < minDistance || (
+            option.distance === minDistance && option.depth < minDepth)) {
+            minDistance = option.distance;
+            minDepth = option.depth;
+            bestDirEnum = openDirEnums[index];
+        }
+    }
+    return bestDirEnum;
+};
+
+var getShortestDistancePath = function(tile, targetTile, dirEnum, depth) {
+    if (tile.x === targetTile.x && tile.y === targetTile.y) return {distance: 0, depth: depth};
+    if (depth > 10) {
+        var dx,dy,dist;                      // variables used for euclidean distance
+        dx = tile.x - targetTile.x;
+        dy = tile.y - targetTile.y;
+        dist = dx*dx+dy*dy;
+        return {distance: dist, depth: depth};
+    }
+
+    var minDistance = Infinity;
+    var openDirEnums = getOpenDirEnums(tile, dirEnum, true);
+    for (var index = 0; index < openDirEnums.length; index++) {
+        var dir = getDirFromEnum(openDirEnums[index]);
+        var nextTile = {x: tile.x + dir.x, y: tile.y + dir.y};
+
+        var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], depth + 1);
+        if (option.distance === 0) return option;
+        if (option.distance < minDistance) {
+            minDistance = option.distance;
+        }
+    }
+
+    return {distance: minDistance, depth: depth};
+};
+
 // retrieve four surrounding tiles and indicate whether they are open
 var getOpenTiles = function(tile,dirEnum) {
 

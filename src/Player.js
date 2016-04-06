@@ -317,7 +317,7 @@ Player.prototype.steer = function() {
         }
 
         if (this.targetting) {
-            this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
+            this.setNextDir(myGetTurnClosestToTarget(this.tile, this.targetTile, openTiles));
         }
 
         if (pathContainsEnergizer(this.tile, this.nextDir) || this.IamDancing) {
