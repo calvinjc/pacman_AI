@@ -201,16 +201,7 @@ clyde.drawTarget = function(ctx) {
 // pacman targets twice the distance from pinky to pacman or target pinky
 
 pacman.setTarget = function() {
-    if (blinky.mode == GHOST_GOING_HOME || blinky.scared) {
-        this.targetTile.x = pinky.tile.x;
-        this.targetTile.y = pinky.tile.y;
-        this.targetting = 'pinky';
-    }
-    else {
-        this.targetTile.x = pinky.tile.x + 2*(pacman.tile.x-pinky.tile.x);
-        this.targetTile.y = pinky.tile.y + 2*(pacman.tile.y-pinky.tile.y);
-        this.targetting = 'flee';
-    }
+
 };
 pacman.drawTarget = function(ctx) {
     if (!this.ai) return;
@@ -218,20 +209,22 @@ pacman.drawTarget = function(ctx) {
     var px,py;
 
     if (this.targetting == 'flee') {
-        px = pacman.pixel.x - pinky.pixel.x;
-        py = pacman.pixel.y - pinky.pixel.y;
-        px = pinky.pixel.x + 2*px;
-        py = pinky.pixel.y + 2*py;
+        px = pacman.pixel.x - pacman.fleeFrom.pixel.x;
+        py = pacman.pixel.y - pacman.fleeFrom.pixel.y;
+        px = pacman.fleeFrom.pixel.x + 2*px;
+        py = pacman.fleeFrom.pixel.y + 2*py;
         ctx.beginPath();
-        ctx.moveTo(pinky.pixel.x, pinky.pixel.y);
+        ctx.moveTo(pacman.fleeFrom.pixel.x, pacman.fleeFrom.pixel.y);
         ctx.lineTo(px,py);
         ctx.closePath();
         ctx.stroke();
         renderer.drawCenterPixelSq(ctx, px, py, targetSize);
     }
     else {
-        renderer.drawCenterPixelSq(ctx, pinky.pixel.x, pinky.pixel.y, targetSize);
-    };
+        if (pacman && pacman.fleeFrom) {
+            renderer.drawCenterPixelSq(ctx, pacman.fleeFrom.pixel.x, pacman.fleeFrom.pixel.y, targetSize);
+        }
+    }
 
 };
 pacman.getPathDistLeft = function(fromPixel, dirEnum) {
