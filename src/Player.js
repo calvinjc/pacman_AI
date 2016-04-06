@@ -178,7 +178,7 @@ var setFleeFromTarget = function() {
         shortestDistance = sortedDistances[0].distance;
     }
     else {
-        pacman.fleeFrom = pinky
+        pacman.fleeFrom = pinky;
         shortestDistance = pinkyDistance;
     }
 };
@@ -188,74 +188,6 @@ var tileContainsGhost = function(tile) {
     if (pinky.tile.x === tile.x && pinky.tile.y === tile.y) return true;
     if (inky.tile.x === tile.x && inky.tile.y === tile.y) return true;
     if (clyde.tile.x === tile.x && clyde.tile.y === tile.y) return true;
-};
-
-var roadIsClearFor3Tiles = function(tile, direction, upToThree) {
-    var nextTile1 = { x: tile.x + direction.x, y: tile.y + direction.y};
-    var nextTile2 = { x: tile.x + (2*direction.x), y: tile.y + (2*direction.y)};
-    var nextTile3 = { x: tile.x + (3*direction.x), y: tile.y + (3*direction.y)};
-
-    if (!map.isFloorTile(nextTile1.x, nextTile1.y))
-        return upToThree;
-    if (tileContainsGhost(nextTile1)) {
-        return false;
-    }
-    if (!map.isFloorTile(nextTile2.x, nextTile2.y))
-        return upToThree;
-    if (tileContainsGhost(nextTile2)) {
-        return false;
-    }
-    if (!map.isFloorTile(nextTile3.x, nextTile3.y))
-        return upToThree;
-    if (tileContainsGhost(nextTile3)) {
-        return false;
-    }
-
-    return true;
-};
-
-var isThereAClearPathAnyDirection = function(tile) {
-    for (var dirEnum = 0; dirEnum < 4; dirEnum++) {
-        var direction = {};
-        setDirFromEnum(direction, dirEnum);
-        if (roadIsClearFor3Tiles(tile, direction, false)) {
-            return dirEnum;
-        }
-    }
-    return -1;
-};
-
-var openPathDistance = function(tile, direction) {
-    var count = 1;
-    var nextTile = { x: tile.x + (count*direction.x), y: tile.y + (count*direction.y)};
-
-    while (count < 20 && map.isFloorTile(nextTile.x, nextTile.y)
-    && !map.isTunnelTile(nextTile.x, nextTile.y)) {
-        if (tileContainsGhost(nextTile)) {
-            return 0;
-        }
-        count++;
-        nextTile = { x: tile.x + (count*direction.x), y: tile.y + (count*direction.y)};
-    }
-
-    return count;
-};
-
-var longestFreePath = function(tile, openDirEnums) {
-    if (!openDirEnums) openDirEnums = [0,1,2,3];
-    var bestDistance = 0;
-    var bestDistanceEnum = -1;
-    for (var x = 0; x < openDirEnums.length; x++) {
-        var dirEnum = openDirEnums[x];
-        var direction = {};
-        setDirFromEnum(direction, dirEnum);
-        var newDistance = openPathDistance(tile, direction);
-        if (newDistance > bestDistance && newDistance > 1) {
-            bestDistance = newDistance;
-            bestDistanceEnum = dirEnum;
-        }
-    }
-    return bestDistanceEnum;
 };
 
 var pathContainsEnergizer = function(tile, direction) {
