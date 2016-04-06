@@ -97,6 +97,20 @@ var getOpenTiles = function(tile,dirEnum) {
     return openTiles;
 };
 
+var getOpenDirEnums = function(tile, dirEnum, noRetreat) {
+    var openDirEnums = [];
+    // exclude the direction from which we came
+    if (map.isFloorTile(tile.x, tile.y-1)){ openDirEnums.push(DIR_UP); }
+    if (map.isFloorTile(tile.x+1, tile.y)) { openDirEnums.push(DIR_RIGHT); }
+    if (map.isFloorTile(tile.x, tile.y+1)) { openDirEnums.push(DIR_DOWN); }
+    if (map.isFloorTile(tile.x-1, tile.y)) { openDirEnums.push(DIR_LEFT); }
+
+    if (noRetreat) openDirEnums = _.without(openDirEnums, rotateAboutFace(dirEnum));
+
+    return openDirEnums;
+};
+
+
 // returns if the given tile coordinate plus the given direction vector has a walkable floor tile
 var isNextTileFloor = function(tile,dir) {
     return map.isFloorTile(tile.x+dir.x,tile.y+dir.y);
