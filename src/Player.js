@@ -321,6 +321,10 @@ Player.prototype.steer = function() {
         if (pacman.fleeFrom.scared) {
             this.targetTile.x = pacman.fleeFrom.tile.x;
             this.targetTile.y = pacman.fleeFrom.tile.y;
+            if (shortestDistance > 50) {
+                this.targetTile.x += (3*pacman.fleeFrom.dir.x);
+                this.targetTile.y += (3*pacman.fleeFrom.dir.y);
+            }
             this.targetting = pacman.fleeFrom.name;
         }
         else if (shortestDistance > 50) {
