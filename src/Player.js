@@ -368,6 +368,14 @@ Player.prototype.steer = function() {
             }
         }
 
+        if (pathContainsEnergizer(this.tile, this.nextDir) || this.IamDancing) {
+            if (shortestDistance > 10 || this.IamDancing) {
+                var oppDirEnum = rotateAboutFace(this.dirEnum);
+                this.setNextDir(oppDirEnum);
+                this.IamDancing = !this.IamDancing;
+            }
+        }
+
         var nextDirOpen = isNextTileFloor(this.tile, this.nextDir);
         if (nextDirOpen) {
             this.setDir(this.nextDirEnum);
