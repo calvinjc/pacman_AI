@@ -222,6 +222,39 @@ var isThereAClearPathAnyDirection = function(tile) {
     return -1;
 };
 
+var openPathDistance = function(tile, direction) {
+    var count = 1;
+    var nextTile = { x: tile.x + (count*direction.x), y: tile.y + (count*direction.y)};
+
+    while (count < 20 && map.isFloorTile(nextTile.x, nextTile.y)
+    && !map.isTunnelTile(nextTile.x, nextTile.y)) {
+        if (tileContainsGhost(nextTile)) {
+            return 0;
+        }
+        count++;
+        nextTile = { x: tile.x + (count*direction.x), y: tile.y + (count*direction.y)};
+    }
+
+    return count;
+};
+
+var longestFreePath = function(tile, openDirEnums) {
+    if (!openDirEnums) openDirEnums = [0,1,2,3];
+    var bestDistance = 0;
+    var bestDistanceEnum = -1;
+    for (var x = 0; x < openDirEnums.length; x++) {
+        var dirEnum = openDirEnums[x];
+        var direction = {};
+        setDirFromEnum(direction, dirEnum);
+        var newDistance = openPathDistance(tile, direction);
+        if (newDistance > bestDistance && newDistance > 1) {
+            bestDistance = newDistance;
+            bestDistanceEnum = dirEnum;
+        }
+    }
+    return bestDistanceEnum;
+};
+
 var pathContainsEnergizer = function(tile, direction) {
     var nextTile1 = { x: tile.x + direction.x, y: tile.y + direction.y};
     var nextTile2 = { x: tile.x + (2*direction.x), y: tile.y + (2*direction.y)};
@@ -288,6 +321,10 @@ Player.prototype.steer = function() {
         if (pacman.fleeFrom.scared) {
             this.targetTile.x = pacman.fleeFrom.tile.x;
             this.targetTile.y = pacman.fleeFrom.tile.y;
+            if (shortestDistance > 50) {
+                this.targetTile.x += (3*pacman.fleeFrom.dir.x);
+                this.targetTile.y += (3*pacman.fleeFrom.dir.y);
+            }
             this.targetting = pacman.fleeFrom.name;
         }
         else if (shortestDistance > 50) {
@@ -303,20 +340,43 @@ Player.prototype.steer = function() {
             this.targetTile.y = pacman.fleeFrom.tile.y + 2 * (pacman.tile.y - pacman.fleeFrom.tile.y);
         }
 
+        var fruitDistance = 99999;
+        if (fruit.isPresent()) {
+            var fruitTileX = Math.floor(fruit.pixel.x / tileSize);
+            var fruitTileY = Math.floor(fruit.pixel.y / tileSize);
+            var fruitDistanceX = pacman.tile.x - fruitTileX;
+            var fruitDistanceY = pacman.tile.y - fruitTileY;
+            fruitDistance = fruitDistanceX * fruitDistanceX + fruitDistanceY * fruitDistanceY;
+        }
+        if (fruitDistance < shortestDistance) {
+            this.targetTile = {x:fruitTileX, y: fruitTileY};
+            this.targetting = "huntingFruit";
+        }
+
         if (this.targetting) {
             this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
 
             if (shortestDistance < 30 && this.targetting === 'flee') {
-                var energizerDirection = isThereAnEnergizerAnyDirection(this.tile);
-                if (energizerDirection > -1) {
-                    this.setNextDir(energizerDirection);
-                }
-                else if (!roadIsClearFor3Tiles(this.tile, this.nextDir, true)) {
-                    var newPlan = isThereAClearPathAnyDirection(this.tile);
-                    if (newPlan > -1) {
-                        this.setNextDir(newPlan);
+                var openDirEnums = [];
+                for (var x = 0; x < 4; x++) {
+                    if (openTiles[x]) {
+                        openDirEnums.push(x);
                     }
                 }
+                if (openDirEnums.length > 1) {
+                    var bestDirEnum = longestFreePath(this.tile);
+                    if (bestDirEnum !== -1) {
+                        this.setNextDir(bestDirEnum);
+                    }
+                }
+            }
+        }
+
+        if (pathContainsEnergizer(this.tile, this.nextDir) || this.IamDancing) {
+            if (shortestDistance > 10 || this.IamDancing) {
+                var oppDirEnum = rotateAboutFace(this.dirEnum);
+                this.setNextDir(oppDirEnum);
+                this.IamDancing = !this.IamDancing;
             }
         }
 
