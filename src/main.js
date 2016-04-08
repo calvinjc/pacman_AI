@@ -21,7 +21,6 @@ window.addEventListener("load", function() {
 	}
 	else {
 		gameMode = GAME_MSPACMAN;
-		practiceMode = true;
 		switchState(newGameState);
 	}
     executive.init();

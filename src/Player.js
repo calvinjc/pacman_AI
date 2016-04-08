@@ -276,7 +276,7 @@ Player.prototype.steer = function() {
             this.targetting = pacman.fleeFrom.name;
             targetFruitAppropriately();
         }
-        else if (shortestDistance > 50) {
+        else if (shortestDistance > 75) {
             if (this.targetting != "huntingdots" ||
                 (this.targetTile.x === this.tile.x && this.targetTile.y === this.tile.y)) {
                 this.targetTile = findNearestDot(this.tile);
