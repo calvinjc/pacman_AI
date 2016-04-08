@@ -326,12 +326,9 @@ Player.prototype.steer = function() {
             this.setNextDir(myGetTurnClosestToTarget(this.tile, this.targetTile));
         }
 
-        if (pathContainsEnergizer(this.tile, this.nextDir) || this.IamDancing) {
-            if (shortestDistance > 10 || this.IamDancing) {
-                var oppDirEnum = rotateAboutFace(this.dirEnum);
-                this.setNextDir(oppDirEnum);
-                this.IamDancing = !this.IamDancing;
-            }
+        if (pathContainsEnergizer(this.tile, this.nextDir) && shortestDistance > 15) {
+            var oppDirEnum = rotateAboutFace(this.dirEnum);
+            this.setNextDir(oppDirEnum);
         }
 
         var nextDirOpen = isNextTileFloor(this.tile, this.nextDir);
@@ -370,9 +367,19 @@ Player.prototype.steer = function() {
 var AIDepth = 15;
 var calculateValue = function(potentialRoute) {
     potentialRoute.value = potentialRoute.distance + potentialRoute.dots / 2;
-
-    if (potentialRoute.energizer && (shortestDistance < 10 || this.numGhostsWithin30 >= 2 || this.numGhostsWithin40 >= 3)) {
+    // use energizers when ghosts are close
+    if (potentialRoute.energizer && (shortestDistance < 15 || this.numGhostsWithin30 >= 2 || this.numGhostsWithin40 >= 3)) {
         potentialRoute.value += AIDepth;
+    }
+
+    // get fruit while running away
+    if (potentialRoute.fruit) {
+        potentialRoute.value += (AIDepth - potentialRoute.fruit);
+    }
+
+    // if you can finish the map you don't have to escape the ghosts
+    if (potentialRoute.dots === map.dotsLeft()) {
+        potentialRoute.value += 500;
     }
 };
 var getOpenPathDistance = function(tile, dirEnum, numSteps) {
@@ -394,10 +401,15 @@ var getOpenPathDistance = function(tile, dirEnum, numSteps) {
     }
 
     var bestRoute = _.max(potentialRoutes, function (route) { return route.value; });
+    var fruitDistance = 0;
+    if (map.tileContainsFruit(tile.x, tile.y)) {
+        fruitDistance = numSteps;
+    }
     return {
         distance: 1 + bestRoute.distance,
         dots: (map.isDotTile(tile.x, tile.y) ? 1 : 0) + bestRoute.dots,
         energizer: map.isEnergizerTile(tile.x, tile.y) || bestRoute.energizer,
+        fruit: fruitDistance || bestRoute.fruit
     };
 };
 
