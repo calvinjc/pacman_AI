@@ -394,6 +394,17 @@ Map.prototype.isEnergizerTile = function(x,y) {
     return this.isEnergizerTileChar(this.getTile(x,y));
 };
 
+Map.prototype.tileContainsFruit = function(x,y) {
+    if (fruit.isPresent()) {
+        var fruitTileX = Math.floor(fruit.pixel.x / tileSize);
+        var fruitTileY = Math.floor(fruit.pixel.y / tileSize);
+        if (x === fruitTileX && y === fruitTileY) {
+            return true;
+        }
+    }
+    return false
+}
+
 // mark the dot at the given coordinate eaten
 Map.prototype.onDotEat = function(x,y) {
     this.dotsEaten++;

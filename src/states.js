@@ -1162,7 +1162,7 @@ var newGameState = (function() {
             clearCheats();
             frames = 0;
             level = startLevel-1;
-            extraLives = practiceMode ? Infinity : 3;
+            extraLives = practiceMode ? Infinity : NumStartingLives;
             setScore(0);
             setFruitFromGameMode();
             readyNewState.init();
@@ -1612,6 +1612,15 @@ var overState = (function() {
     return {
         init: function() {
             frames = 0;
+            var now = Date.now();
+            var gameInfo = {
+                date: now.toString(),
+                level: level,
+                score: getScore(),
+                numStartingLives: NumStartingLives,
+                extraLifeScore: ExtraLifeScore
+            };
+            console.log(JSON.stringify(gameInfo));
         },
         draw: function() {
             renderer.blitMap();
@@ -1620,7 +1629,7 @@ var overState = (function() {
         },
         update: function() {
             if (frames == 120) {
-                switchState(homeState,60);
+                switchState(newGameState);
             }
             else
                 frames++;

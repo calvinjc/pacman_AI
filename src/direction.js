@@ -44,6 +44,15 @@ var setDirFromEnum = function(dir,dirEnum) {
     else if (dirEnum == DIR_LEFT) { dir.x = -1; dir.y = 0; }
 };
 
+var getDirFromEnum = function(dirEnum) {
+    var dir = {};
+    if (dirEnum == DIR_UP)         { dir.x = 0; dir.y =-1; }
+    else if (dirEnum == DIR_RIGHT)  { dir.x =1; dir.y = 0; }
+    else if (dirEnum == DIR_DOWN)  { dir.x = 0; dir.y = 1; }
+    else if (dirEnum == DIR_LEFT) { dir.x = -1; dir.y = 0; }
+    return dir;
+};
+
 // return the direction of the open, surrounding tile closest to our target
 var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
 
@@ -67,8 +76,53 @@ var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
     return dirEnum;
 };
 
+var myGetTurnClosestToTarget = function(tile, targetTile) {
+    var minDistance = Infinity;
+    var minDepth = Infinity;
+    var bestDirEnum = 0;
+    var openDirEnums = getOpenDirEnums(tile, 0);
+    for (var index = 0; index < openDirEnums.length; index++) {
+        var dir = getDirFromEnum(openDirEnums[index]);
+        var nextTile = {x: tile.x + dir.x, y: tile.y + dir.y};
+        var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], 0);
+        if (option.distance < minDistance || (
+            option.distance === minDistance && option.depth < minDepth)) {
+            minDistance = option.distance;
+            minDepth = option.depth;
+            bestDirEnum = openDirEnums[index];
+        }
+    }
+    return bestDirEnum;
+};
+
+var getShortestDistancePath = function(tile, targetTile, dirEnum, depth) {
+    if (tile.x === targetTile.x && tile.y === targetTile.y) return {distance: 0, depth: depth};
+    if (depth > 10) {
+        var dx,dy,dist;                      // variables used for euclidean distance
+        dx = tile.x - targetTile.x;
+        dy = tile.y - targetTile.y;
+        dist = dx*dx+dy*dy;
+        return {distance: dist, depth: depth};
+    }
+
+    var minDistance = Infinity;
+    var openDirEnums = getOpenDirEnums(tile, dirEnum, true);
+    for (var index = 0; index < openDirEnums.length; index++) {
+        var dir = getDirFromEnum(openDirEnums[index]);
+        var nextTile = {x: tile.x + dir.x, y: tile.y + dir.y};
+
+        var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], depth + 1);
+        if (option.distance === 0) return option;
+        if (option.distance < minDistance) {
+            minDistance = option.distance;
+        }
+    }
+
+    return {distance: minDistance, depth: depth};
+};
+
 // retrieve four surrounding tiles and indicate whether they are open
-var getOpenTiles = function(tile,dirEnum) {
+var getOpenTiles = function(tile,dirEnum, includeTheDirectionWeCameFrom) {
 
     // get open passages
     var openTiles = {};
@@ -77,25 +131,28 @@ var getOpenTiles = function(tile,dirEnum) {
     openTiles[DIR_DOWN] =  map.isFloorTile(tile.x, tile.y+1);
     openTiles[DIR_LEFT] =  map.isFloorTile(tile.x-1, tile.y);
 
-    var numOpenTiles = 0;
-    var i;
-    if (dirEnum != undefined) {
+    if (!includeTheDirectionWeCameFrom) {
+        var numOpenTiles = 0;
+        var i;
+        if (dirEnum != undefined) {
 
-        // count number of open tiles
-        for (i=0; i<4; i++)
-            if (openTiles[i])
-                numOpenTiles++;
+            // count number of open tiles
+            for (i = 0; i < 4; i++)
+                if (openTiles[i])
+                    numOpenTiles++;
 
-        // By design, no mazes should have dead ends,
-        // but allow player to turn around if and only if it's necessary.
-        // Only close the passage behind the player if there are other openings.
-        var oppDirEnum = rotateAboutFace(dirEnum); // current opposite direction enum
-        if (numOpenTiles > 1)
-            openTiles[oppDirEnum] = false;
+            // By design, no mazes should have dead ends,
+            // but allow player to turn around if and only if it's necessary.
+            // Only close the passage behind the player if there are other openings.
+            var oppDirEnum = rotateAboutFace(dirEnum); // current opposite direction enum
+            if (numOpenTiles > 1)
+                openTiles[oppDirEnum] = false;
+        }
     }
 
     return openTiles;
 };
+
 
 var getOpenDirEnums = function(tile, dirEnum, noRetreat) {
     var openDirEnums = [];

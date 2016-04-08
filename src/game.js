@@ -168,6 +168,10 @@ var clearCheats, backupCheats, restoreCheats;
     };
 })();
 
+// Default settings
+var NumStartingLives = 2;
+var ExtraLifeScore = 20000;
+
 // current level, lives, and score
 var level = 1;
 var extraLives = 0;
@@ -228,7 +232,7 @@ var addScore = function(p) {
     var score = getScore();
 
     // handle extra life at 10000 points
-    if (score < 10000 && score+p >= 10000) {
+    if (score < ExtraLifeScore && score+p >= ExtraLifeScore) {
         extraLives++;
         renderer.drawMap();
     }

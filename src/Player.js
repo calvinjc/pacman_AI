@@ -20,8 +20,7 @@ var Player = function() {
     this.savedStopped = {};
     this.savedEatPauseFramesLeft = {};
 
-    this.prevBestDistance = 0;
-    this.prevBestDirEnum = 0;
+    this.prevBestRoute = { dirEnum: 0, distance: 0, dots: 0, energizer: 0, value: 0};
 };
 
 // inherit functions from Actor
@@ -210,8 +209,7 @@ var pathContainsEnergizer = function(tile, direction) {
 
 var isThereAnEnergizerAnyDirection = function(tile) {
     for (var dirEnum = 0; dirEnum < 4; dirEnum++) {
-        var direction = {};
-        setDirFromEnum(direction, dirEnum);
+        var direction = getDirFromEnum(dirEnum);
         if (pathContainsEnergizer(tile, direction)) {
             return dirEnum;
         }
@@ -241,6 +239,22 @@ var findNearestDot = function(tile) {
     }
     return {x:0,y:0};
 };
+
+var targetFruitAppropriately = function() {
+    var fruitDistance = Infinity;
+    if (fruit.isPresent()) {
+        var fruitTileX = Math.floor(fruit.pixel.x / tileSize);
+        var fruitTileY = Math.floor(fruit.pixel.y / tileSize);
+        var fruitDistanceX = pacman.tile.x - fruitTileX;
+        var fruitDistanceY = pacman.tile.y - fruitTileY;
+        fruitDistance = fruitDistanceX * fruitDistanceX + fruitDistanceY * fruitDistanceY;
+    }
+    if (fruitDistance < shortestDistance) {
+        this.targetTile = {x:fruitTileX, y: fruitTileY};
+        this.targetting = "huntingFruit";
+    }
+}
+
 // determine direction
 Player.prototype.steer = function() {
 
@@ -251,7 +265,6 @@ Player.prototype.steer = function() {
         }
         
         setFleeFromTarget();
-        var openTiles = getOpenTiles(this.tile, this.dirEnum);
 
         if (pacman.fleeFrom.scared) {
             this.targetTile.x = pacman.fleeFrom.tile.x;
@@ -261,71 +274,61 @@ Player.prototype.steer = function() {
                 this.targetTile.y += (3*pacman.fleeFrom.dir.y);
             }
             this.targetting = pacman.fleeFrom.name;
+            targetFruitAppropriately();
         }
-        else if (shortestDistance > 50) {
+        else if (shortestDistance > 75) {
             if (this.targetting != "huntingdots" ||
                 (this.targetTile.x === this.tile.x && this.targetTile.y === this.tile.y)) {
                 this.targetTile = findNearestDot(this.tile);
                 this.targetting = "huntingdots";
             }
+            targetFruitAppropriately();
         }
         else {
             this.targetting = false;
 
-            var bestDistance = 0;
-            var bestDirEnum = 0;
+            if (this.distToMid.x === 0 || this.distToMid.y === 0) {
 
-            var openDirEnums = getOpenDirEnums(this.tile, this.dirEnum);
-            for (var index = 0; index < openDirEnums.length; index++) {
-                var potentialDirEnum = openDirEnums[index];
-                var potentialDirection = {};
-                setDirFromEnum(potentialDirection, potentialDirEnum);
-                var nextTile = {x: this.tile.x + potentialDirection.x, y: this.tile.y + potentialDirection.y};
+                this.numGhostsWithin30 = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 30; }).length;
+                this.numGhostsWithin40 = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 40; }).length;
 
-                var potentialRouteDistance = getOpenPathDistance(nextTile, potentialDirEnum, 1);
-                if (potentialRouteDistance > bestDistance) {
-                    bestDistance = potentialRouteDistance;
-                    bestDirEnum = potentialDirEnum;
+                getAllGhostFutureTiles(AIDepth);
+                var potentialRoutes = [];
+                var openDirEnums = getOpenDirEnums(this.tile, this.dirEnum);
+                for (var index = 0; index < openDirEnums.length; index++) {
+                    var potentialDirEnum = openDirEnums[index];
+                    var potentialDirection = getDirFromEnum(potentialDirEnum);
+                    var nextTile = {x: this.tile.x + potentialDirection.x, y: this.tile.y + potentialDirection.y};
+
+                    var potentialRoute = _.extend(getOpenPathDistance(nextTile, potentialDirEnum, 1), {dirEnum: potentialDirEnum});
+                    calculateValue(potentialRoute);
+
+                    if (potentialDirEnum === this.prevBestRoute.dirEnum) {
+                        this.prevBestRoute.value = potentialRoute.value;
+                    }
+
+                    potentialRoutes.push(potentialRoute);
                 }
 
-                if (potentialDirEnum === this.prevBestDirEnum) {
-                    this.prevBestDistance= potentialRouteDistance;
+                var bestRoute = _.max(potentialRoutes, function (route) { return route.value; });
+
+                if (bestRoute.value > this.prevBestRoute.value || !_.contains(openDirEnums, this.prevBestRoute.dirEnum)) {
+                    this.prevBestRoute = bestRoute;
+                    this.setNextDir(bestRoute.dirEnum);
+                }
+                else {
+                    this.setNextDir(this.prevBestRoute.dirEnum);
                 }
             }
-
-            if (bestDistance > this.prevBestDistance || !_.contains(openDirEnums, this.prevBestDirEnum)) {
-                this.prevBestDistance = bestDistance;
-                this.prevBestDirEnum = bestDirEnum;
-                this.setNextDir(bestDirEnum);
-            }
-            else {
-                this.setNextDir(this.prevBestDirEnum);
-            }
-        }
-
-        var fruitDistance = 99999;
-        if (fruit.isPresent()) {
-            var fruitTileX = Math.floor(fruit.pixel.x / tileSize);
-            var fruitTileY = Math.floor(fruit.pixel.y / tileSize);
-            var fruitDistanceX = pacman.tile.x - fruitTileX;
-            var fruitDistanceY = pacman.tile.y - fruitTileY;
-            fruitDistance = fruitDistanceX * fruitDistanceX + fruitDistanceY * fruitDistanceY;
-        }
-        if (fruitDistance < shortestDistance) {
-            this.targetTile = {x:fruitTileX, y: fruitTileY};
-            this.targetting = "huntingFruit";
         }
 
         if (this.targetting) {
-            this.setNextDir(getTurnClosestToTarget(this.tile, this.targetTile, openTiles));
+            this.setNextDir(myGetTurnClosestToTarget(this.tile, this.targetTile));
         }
 
-        if (pathContainsEnergizer(this.tile, this.nextDir) || this.IamDancing) {
-            if (shortestDistance > 10 || this.IamDancing) {
-                var oppDirEnum = rotateAboutFace(this.dirEnum);
-                this.setNextDir(oppDirEnum);
-                this.IamDancing = !this.IamDancing;
-            }
+        if (pathContainsEnergizer(this.tile, this.nextDir) && shortestDistance > 15) {
+            var oppDirEnum = rotateAboutFace(this.dirEnum);
+            this.setNextDir(oppDirEnum);
         }
 
         var nextDirOpen = isNextTileFloor(this.tile, this.nextDir);
@@ -345,8 +348,7 @@ Player.prototype.steer = function() {
     }
     else {
         // Determine if input direction is open.
-        var inputDir = {};
-        setDirFromEnum(inputDir, this.inputDirEnum);
+        var inputDir = getDirFromEnum(this.inputDirEnum);
         var inputDirOpen = isNextTileFloor(this.tile, inputDir);
 
         if (inputDirOpen) {
@@ -362,42 +364,72 @@ Player.prototype.steer = function() {
     }
 };
 
+var AIDepth = 15;
+var calculateValue = function(potentialRoute) {
+    potentialRoute.value = potentialRoute.distance + potentialRoute.dots / 2;
+    // use energizers when ghosts are close
+    if (potentialRoute.energizer && (shortestDistance < 15 || this.numGhostsWithin30 >= 2 || this.numGhostsWithin40 >= 3)) {
+        potentialRoute.value += AIDepth;
+    }
+
+    // get fruit while running away
+    if (potentialRoute.fruit) {
+        potentialRoute.value += (AIDepth - potentialRoute.fruit);
+    }
+
+    // if you can finish the map you don't have to escape the ghosts
+    if (potentialRoute.dots === map.dotsLeft()) {
+        potentialRoute.value += 500;
+    }
+};
 var getOpenPathDistance = function(tile, dirEnum, numSteps) {
-    if (numSteps > 13 || tileIntersectsGhostPaths(tile, numSteps)) {
-        return 0;
+    if (numSteps > AIDepth || tileIntersectsGhostPaths(tile, numSteps)) {
+        return {distance: 0, dots: 0, energizer: 0};
     }
 
     var openDirEnums = getOpenDirEnums(tile, dirEnum, true);
-    var bestDistance = 0;
+    var potentialRoutes = [];
 
     for (var index = 0; index < openDirEnums.length; index++) {
         var potentialDirEnum = openDirEnums[index];
-        var potentialDirection = {};
-        setDirFromEnum(potentialDirection, potentialDirEnum);
+        var potentialDirection = getDirFromEnum(potentialDirEnum);
         var nextTile = {x: tile.x + potentialDirection.x, y: tile.y + potentialDirection.y};
 
-        var potentialRouteDistance = getOpenPathDistance(nextTile, potentialDirEnum, numSteps + 1);
-        if (potentialRouteDistance > bestDistance) {
-            bestDistance = potentialRouteDistance;
-        }
+        var potentialRoute = getOpenPathDistance(nextTile, potentialDirEnum, numSteps + 1);
+        calculateValue(potentialRoute);
+        potentialRoutes.push(potentialRoute);
     }
 
-    return 1 + bestDistance;
+    var bestRoute = _.max(potentialRoutes, function (route) { return route.value; });
+    var fruitDistance = 0;
+    if (map.tileContainsFruit(tile.x, tile.y)) {
+        fruitDistance = numSteps;
+    }
+    return {
+        distance: 1 + bestRoute.distance,
+        dots: (map.isDotTile(tile.x, tile.y) ? 1 : 0) + bestRoute.dots,
+        energizer: map.isEnergizerTile(tile.x, tile.y) || bestRoute.energizer,
+        fruit: fruitDistance || bestRoute.fruit
+    };
 };
+
 var tileIntersectsGhostPaths = function(tile, numSteps) {
-    var blinkyTiles = getGhostFutureTiles(blinky, numSteps);
-    if (_.findWhere(blinkyTiles, {x: tile.x, y: tile.y})) { return true; }
+    if (_.findWhere(blinky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) { return true; }
 
-    var pinkyTiles = getGhostFutureTiles(pinky, numSteps);
-    if (_.findWhere(pinkyTiles, {x: tile.x, y: tile.y})) { return true; }
+    if (_.findWhere(pinky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) { return true; }
 
-    var inkyTiles = getGhostFutureTiles(inky, numSteps);
-    if (_.findWhere(inkyTiles, {x: tile.x, y: tile.y})) { return true; }
+    if (_.findWhere(inky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) { return true; }
 
-    var clydeTiles = getGhostFutureTiles(clyde, numSteps);
-    if (_.findWhere(clydeTiles, {x: tile.x, y: tile.y})) { return true; }
+    if (_.findWhere(clyde.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) { return true; }
 
     return false;
+};
+
+var getAllGhostFutureTiles = function(numSteps) {
+    blinky.futureTiles = getGhostFutureTiles(blinky, numSteps);
+    pinky.futureTiles = getGhostFutureTiles(pinky, numSteps);
+    inky.futureTiles = getGhostFutureTiles(inky, numSteps);
+    clyde.futureTiles = getGhostFutureTiles(clyde, numSteps);
 };
 
 var getGhostFutureTiles = function(actor, numSteps) {
