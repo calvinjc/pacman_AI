@@ -169,8 +169,8 @@ var clearCheats, backupCheats, restoreCheats;
 })();
 
 // Default settings
-var NumStartingLives = 2;
-var ExtraLifeScore = 20000;
+var NumStartingLives = 3;
+var ExtraLifeScore = 10000;
 
 // current level, lives, and score
 var level = 1;

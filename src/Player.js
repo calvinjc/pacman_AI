@@ -20,7 +20,7 @@ var Player = function() {
     this.savedStopped = {};
     this.savedEatPauseFramesLeft = {};
 
-    this.prevBestRoute = { dirEnum: 0, distance: 0, dots: 0, energizer: 0, value: 0};
+    this.prevBestRoute = { dirEnum: 0, distance: 0, dots: 0, energizer: 0, value: 0, fruit: 0, targetTiles: []};
 };
 
 // inherit functions from Actor
@@ -253,7 +253,7 @@ var targetFruitAppropriately = function() {
         this.targetTile = {x:fruitTileX, y: fruitTileY};
         this.targetting = "huntingFruit";
     }
-}
+};
 
 // determine direction
 Player.prototype.steer = function() {
@@ -289,8 +289,9 @@ Player.prototype.steer = function() {
 
             if (this.distToMid.x === 0 || this.distToMid.y === 0) {
 
-                this.numGhostsWithin30 = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 30; }).length;
-                this.numGhostsWithin40 = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 40; }).length;
+                this.numGhostsWithinA = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 30; }).length;
+                this.numGhostsWithinB = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 40; }).length;
+                this.numGhostsWithinC = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 50; }).length;
 
                 getAllGhostFutureTiles(AIDepth);
                 var potentialRoutes = [];
@@ -305,6 +306,7 @@ Player.prototype.steer = function() {
 
                     if (potentialDirEnum === this.prevBestRoute.dirEnum) {
                         this.prevBestRoute.value = potentialRoute.value;
+                        this.prevBestRoute.targetTiles = potentialRoute.targetTiles;
                     }
 
                     potentialRoutes.push(potentialRoute);
@@ -315,10 +317,13 @@ Player.prototype.steer = function() {
                 if (bestRoute.value > this.prevBestRoute.value || !_.contains(openDirEnums, this.prevBestRoute.dirEnum)) {
                     this.prevBestRoute = bestRoute;
                     this.setNextDir(bestRoute.dirEnum);
+                    pacman.targetTiles = bestRoute.targetTiles;
                 }
                 else {
                     this.setNextDir(this.prevBestRoute.dirEnum);
+                    pacman.targetTiles = this.prevBestRoute.targetTiles;
                 }
+                pacman.targetTile = {};
             }
         }
 
@@ -326,7 +331,7 @@ Player.prototype.steer = function() {
             this.setNextDir(myGetTurnClosestToTarget(this.tile, this.targetTile));
         }
 
-        if (pathContainsEnergizer(this.tile, this.nextDir) && shortestDistance > 15) {
+        if (pathContainsEnergizer(this.tile, this.nextDir) && shortestDistance > 15 && map.dotsLeft() > 10) {
             var oppDirEnum = rotateAboutFace(this.dirEnum);
             this.setNextDir(oppDirEnum);
         }
@@ -368,13 +373,18 @@ var AIDepth = 15;
 var calculateValue = function(potentialRoute) {
     potentialRoute.value = potentialRoute.distance + potentialRoute.dots / 2;
     // use energizers when ghosts are close
-    if (potentialRoute.energizer && (shortestDistance < 15 || this.numGhostsWithin30 >= 2 || this.numGhostsWithin40 >= 3)) {
+    if (potentialRoute.energizer && (shortestDistance < 10 || this.numGhostsWithinA >= 2
+        || this.numGhostsWithinB >= 3 || this.numGhostsWithinC === 4))
+    {
         potentialRoute.value += AIDepth;
     }
+    //else if (potentialRoute.distance === AIDepth) {
+    //    potentialRoute.value -= 3;
+    //}
 
     // get fruit while running away
     if (potentialRoute.fruit) {
-        potentialRoute.value += (AIDepth - potentialRoute.fruit);
+        potentialRoute.value += AIDepth;
     }
 
     // if you can finish the map you don't have to escape the ghosts
@@ -384,7 +394,7 @@ var calculateValue = function(potentialRoute) {
 };
 var getOpenPathDistance = function(tile, dirEnum, numSteps) {
     if (numSteps > AIDepth || tileIntersectsGhostPaths(tile, numSteps)) {
-        return {distance: 0, dots: 0, energizer: 0};
+        return {distance: 0, dots: 0, energizer: 0, targetTiles: [tile]};
     }
 
     var openDirEnums = getOpenDirEnums(tile, dirEnum, true);
@@ -409,7 +419,8 @@ var getOpenPathDistance = function(tile, dirEnum, numSteps) {
         distance: 1 + bestRoute.distance,
         dots: (map.isDotTile(tile.x, tile.y) ? 1 : 0) + bestRoute.dots,
         energizer: map.isEnergizerTile(tile.x, tile.y) || bestRoute.energizer,
-        fruit: fruitDistance || bestRoute.fruit
+        fruit: fruitDistance || bestRoute.fruit,
+        targetTiles: [tile].concat(bestRoute.targetTiles)
     };
 };
 
