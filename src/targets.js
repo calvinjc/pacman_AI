@@ -208,24 +208,18 @@ pacman.drawTarget = function(ctx) {
     ctx.fillStyle = this.color;
     var px,py;
 
-    if (this.targetting == 'flee') {
-        px = pacman.pixel.x - pacman.fleeFrom.pixel.x;
-        py = pacman.pixel.y - pacman.fleeFrom.pixel.y;
-        px = pacman.fleeFrom.pixel.x + 2*px;
-        py = pacman.fleeFrom.pixel.y + 2*py;
-        ctx.beginPath();
-        ctx.moveTo(pacman.fleeFrom.pixel.x, pacman.fleeFrom.pixel.y);
-        ctx.lineTo(px,py);
-        ctx.closePath();
-        ctx.stroke();
-        renderer.drawCenterPixelSq(ctx, px, py, targetSize);
-    }
-    else {
-        if (pacman && pacman.fleeFrom) {
-            renderer.drawCenterPixelSq(ctx, pacman.fleeFrom.pixel.x, pacman.fleeFrom.pixel.y, targetSize);
-        }
+    if (pacman.targetTiles.length === 0) {
+        pacman.targetTiles.push(pacman.targetTile);
     }
 
+    _.each(pacman.targetTiles, function(targetTile) {
+        var targetPixel = {};
+        targetPixel.x = targetTile.x * tileSize + midTile.x;
+        targetPixel.y = targetTile.y * tileSize + midTile.y;
+        renderer.drawCenterPixelSq(ctx, targetPixel.x, targetPixel.y, targetSize);
+    });
+
+    pacman.targetTiles = [];
 };
 pacman.getPathDistLeft = function(fromPixel, dirEnum) {
     var distLeft = tileSize;
