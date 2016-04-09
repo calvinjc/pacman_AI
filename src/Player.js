@@ -196,12 +196,12 @@ var pathContainsEnergizer = function(tile, direction) {
     if (!map.isFloorTile(nextTile1.x, nextTile1.y || tileContainsGhost(nextTile1)))
         return false;
     if (map.isEnergizerTile(nextTile1.x, nextTile1.y)) {
-        return true;
+        return _.clone(nextTile1);
     }
     if (!map.isFloorTile(nextTile2.x, nextTile2.y) || tileContainsGhost(nextTile2))
         return false;
     if (map.isEnergizerTile(nextTile2.x, nextTile2.y)) {
-        return true;
+        return _.clone(nextTile2);
     }
 
     return false;
@@ -210,14 +210,15 @@ var pathContainsEnergizer = function(tile, direction) {
 var isThereAnEnergizerAnyDirection = function(tile) {
     for (var dirEnum = 0; dirEnum < 4; dirEnum++) {
         var direction = getDirFromEnum(dirEnum);
-        if (pathContainsEnergizer(tile, direction)) {
-            return dirEnum;
+        var energizer = pathContainsEnergizer(tile, direction);
+        if (energizer) {
+            return {dirEnum: dirEnum, energizerTile: energizer};
         }
     }
-    return -1;
+    return {dirEnum: -1};
 };
 
-var findNearestDot = function(tile, options) {
+var findNearestDot = function(tile, options, recursive) {
     var dotTile = {x:-1, y:-1};
     if (!options) {
         options = {minX: 0, maxX: mapWidth_Tile, minY: 0, maxY: mapHeight_Tile};
@@ -286,6 +287,28 @@ var findNearestDot = function(tile, options) {
         if (dotTile.x >= 0 && dotTile.y >= 0) break;
     }
 
+    // find a different Target
+    var energizer = isThereAnEnergizerAnyDirection(dotTile);
+    if (energizer.dirEnum > -1 && map.dotsLeft() > 10 && !recursive) {
+        options = {};
+        //left half
+        if (energizer.energizerTile.x < (mapWidth_Tile/2)) {
+            options.minX = energizer.energizerTile.x +3;
+        }
+        else { //right half
+            options.maxX = energizer.energizerTile.x -3;
+        }
+
+        //top half
+        if (energizer.energizerTile.y < (mapHeight_Tile/2)) {
+            options.minY = energizer.energizerTile.y +3;
+        }
+        else { //bottom half
+            options.maxY = energizer.energizerTile.y -3;
+        }
+
+        return findNearestDot(tile, options, true)
+    }
     return dotTile;
 };
 
