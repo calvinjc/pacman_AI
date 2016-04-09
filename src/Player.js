@@ -330,7 +330,6 @@ var targetFruitAppropriately = function() {
 // determine direction
 Player.prototype.steer = function() {
 
-    // if AI-controlled, only turn at mid-tile
     if (this.ai) {
         if (this.stopped) {
             this.stopped = false;
@@ -445,7 +444,7 @@ var AIDepth = 15;
 var calculateValue = function(potentialRoute) {
     potentialRoute.value = potentialRoute.distance + potentialRoute.dots / 2;
     // use energizers when ghosts are close
-    if (potentialRoute.energizer && (shortestDistance < 10 || this.numGhostsWithinA >= 2
+    if (potentialRoute.energizer && (shortestDistance < 15 || this.numGhostsWithinA >= 2
         || this.numGhostsWithinB >= 3 || this.numGhostsWithinC === 4))
     {
         potentialRoute.value += AIDepth;
@@ -454,9 +453,14 @@ var calculateValue = function(potentialRoute) {
     //    potentialRoute.value -= 3;
     //}
 
+    // target scared ghosts
+    if (potentialRoute.scaredGhostDistance) {
+        potentialRoute.value += (AIDepth + (AIDepth - potentialRoute.scaredGhostDistance));
+    }
+
     // get fruit while running away
     if (potentialRoute.fruit) {
-        potentialRoute.value += AIDepth;
+        potentialRoute.value += (AIDepth + (AIDepth - potentialRoute.fruit));
     }
 
     // if you can finish the map you don't have to escape the ghosts
@@ -465,8 +469,11 @@ var calculateValue = function(potentialRoute) {
     }
 };
 var getOpenPathDistance = function(tile, dirEnum, numSteps) {
-    if (numSteps > AIDepth || tileIntersectsGhostPaths(tile, numSteps)) {
-        return {distance: 0, dots: 0, energizer: 0, targetTiles: [tile]};
+    var intersectGhost = tileIntersectsGhostPaths(tile, numSteps)
+    if (numSteps > AIDepth || intersectGhost) {
+        var scaredGhostDistance = intersectGhost.isScared ? intersectGhost.distance : 0;
+
+        return {distance: 0, dots: 0, energizer: 0, scaredGhostDistance: scaredGhostDistance, targetTiles: [tile]};
     }
 
     var openDirEnums = getOpenDirEnums(tile, dirEnum, true);
@@ -492,18 +499,27 @@ var getOpenPathDistance = function(tile, dirEnum, numSteps) {
         dots: (map.isDotTile(tile.x, tile.y) ? 1 : 0) + bestRoute.dots,
         energizer: map.isEnergizerTile(tile.x, tile.y) || bestRoute.energizer,
         fruit: fruitDistance || bestRoute.fruit,
+        scaredGhostDistance: bestRoute.scaredGhostDistance,
         targetTiles: [tile].concat(bestRoute.targetTiles)
     };
 };
 
 var tileIntersectsGhostPaths = function(tile, numSteps) {
-    if (_.findWhere(blinky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) { return true; }
+    if (_.findWhere(blinky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) {
+        return {isScared: blinky.scared, distance: numSteps};
+    }
 
-    if (_.findWhere(pinky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) { return true; }
+    if (_.findWhere(pinky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) {
+        return {isScared: pinky.scared, distance: numSteps};
+    }
 
-    if (_.findWhere(inky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) { return true; }
+    if (_.findWhere(inky.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) {
+        return {isScared: inky.scared, distance: numSteps};
+    }
 
-    if (_.findWhere(clyde.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) { return true; }
+    if (_.findWhere(clyde.futureTiles.slice(0, numSteps+1), {x: tile.x, y: tile.y})) {
+        return {isScared: clyde.scared, distance: numSteps};
+    }
 
     return false;
 };
@@ -516,7 +532,7 @@ var getAllGhostFutureTiles = function(numSteps) {
 };
 
 var getGhostFutureTiles = function(actor, numSteps) {
-    if (!actor.targetting) return [];
+    if (!(actor.mode === GHOST_OUTSIDE || actor.mode === GHOST_LEAVING_HOME)) return [];
 
     // current state of the predicted path
     var tile = { x: actor.tile.x, y: actor.tile.y};
