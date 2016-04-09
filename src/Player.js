@@ -217,27 +217,76 @@ var isThereAnEnergizerAnyDirection = function(tile) {
     return -1;
 };
 
-var findNearestDot = function(tile) {
-    for (var index = 0; index < mapHeight_Tile; index++)
+var findNearestDot = function(tile, options) {
+    var dotTile = {x:-1, y:-1};
+    if (!options) {
+        options = {minX: 0, maxX: mapWidth_Tile, minY: 0, maxY: mapHeight_Tile};
+    }
+    else {
+        if (!options.minX) options.minX = 0;
+        if (!options.maxX) options.maxX = mapWidth_Tile;
+        if (!options.minY) options.minY = 0;
+        if (!options.maxY) options.maxY = mapHeight_Tile;
+    }
+
+    for (var radius = 1; radius < mapHeight_Tile; radius++)
     {
-        // use y for outer loop so we prefer going up since we start at the bottom of the map
-        var indexY = tile.y - index; if (indexY < 0) indexY = 0;
-        var maxIndexY = tile.y + index; if (maxIndexY > mapHeight_Tile) maxIndexY = mapHeight_Tile;
-        for (; indexY < maxIndexY; indexY++)
-        {
-            // iterate over x from highest to lowest so we prefer to go right
-            // because at the beginning of levels ghosts always go left
-            var indexX = tile.x + index; if (indexX > mapWidth_Tile) indexX = mapWidth_Tile;
-            var minIndexX = tile.x - index; if (minIndexX < 0) minIndexX = 0;
-            for (; indexX > minIndexX; indexX--)
-            {
-                if (map.isDotTile(indexX, indexY)) {
-                    return {x: indexX, y: indexY};
+        var upY = tile.y - radius;
+        var downY = tile.y + radius;
+        var leftX = tile.x - radius;
+        var rightX = tile.x + radius;
+
+        for (var index = 0; index <= radius; index++) {
+            //up
+            if (upY >= options.minY && upY <= options.maxY) {
+                if (map.isDotTile(tile.x + index, upY) && (tile.x + index) >= options.minX && (tile.x + index) <= options.maxX) {
+                    dotTile =  {x: tile.x + index, y: upY};
+                    break;
+                }
+                if (map.isDotTile(tile.x - index, upY) && (tile.x - index) >= options.minX && (tile.x - index) <= options.maxX) {
+                    dotTile = {x: tile.x - index, y: upY};
+                    break;
+                }
+            }
+            //right
+            if (rightX >= options.minX && rightX <= options.maxX) {
+                if (map.isDotTile(rightX, tile.y - index) && (tile.y - index) >= options.minY && (tile.y - index) <= options.maxY) {
+                    dotTile = {x: rightX, y: tile.y - index};
+                    break;
+                }
+                if (map.isDotTile(rightX, tile.y + index) && (tile.y + index) >= options.minY && (tile.y + index) <= options.maxY) {
+                    dotTile = {x: rightX, y: tile.y + index};
+                    break;
+                }
+            }
+            //left
+            if (leftX >= options.minX && leftX <= options.maxX) {
+                if (map.isDotTile(leftX, tile.y - index) && (tile.y - index) >= options.minY && (tile.y - index) <= options.maxY) {
+                    dotTile = {x: leftX, y: tile.y - index};
+                    break;
+                }
+                if (map.isDotTile(leftX, tile.y + index) && (tile.y + index) >= options.minY && (tile.y + index) <= options.maxY) {
+                    dotTile = {x: leftX, y: tile.y + index};
+                    break;
+                }
+            }
+            //down
+            if (downY >= options.minY && downY <= options.maxY) {
+                if (map.isDotTile(tile.x + index, downY) && (tile.x + index) >= options.minX && (tile.x + index) <= options.maxX) {
+                    dotTile = {x: tile.x + index, y: downY};
+                    break;
+                }
+                if (map.isDotTile(tile.x - index, downY) && (tile.x - index) >= options.minX && (tile.x - index) <= options.maxX) {
+                    dotTile = {x: tile.x - index, y: downY};
+                    break;
                 }
             }
         }
+
+        if (dotTile.x >= 0 && dotTile.y >= 0) break;
     }
-    return {x:0,y:0};
+
+    return dotTile;
 };
 
 var targetFruitAppropriately = function() {
