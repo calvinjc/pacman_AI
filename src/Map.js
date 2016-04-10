@@ -342,6 +342,24 @@ Map.prototype.teleport = function(actor){
     }
 };
 
+Map.prototype.getOppositeTunnelTile = function(tile) {
+    var oppositeTile = _.clone(tile);
+
+    var tunnel = this.tunnelRows[tile.y];
+    if (tunnel) {
+        if (tile.x < -1) {
+            oppositeTile.x = (mapWidth_Tile + 1);
+            return oppositeTile;
+        }
+        else if (tile.x > (mapWidth_Tile + 1)) {
+            oppositeTile.x = -1;
+            return oppositeTile;
+        }
+    }
+
+    return false;
+};
+
 Map.prototype.posToIndex = function(x,y) {
     if (x>=0 && x<this.numCols && y>=0 && y<this.numRows) 
         return x+y*this.numCols;

@@ -312,7 +312,7 @@ var findNearestDot = function(tile, options, recursive) {
     return dotTile;
 };
 
-var targetFruitAppropriately = function() {
+var targetFruitAppropriately = function(player) {
     var fruitDistance = Infinity;
     if (fruit.isPresent()) {
         var fruitTileX = Math.floor(fruit.pixel.x / tileSize);
@@ -322,8 +322,8 @@ var targetFruitAppropriately = function() {
         fruitDistance = fruitDistanceX * fruitDistanceX + fruitDistanceY * fruitDistanceY;
     }
     if (fruitDistance < shortestDistance) {
-        this.targetTile = {x:fruitTileX, y: fruitTileY};
-        this.targetting = "huntingFruit";
+        player.targetTile = {x:fruitTileX, y: fruitTileY};
+        player.targetting = "huntingFruit";
     }
 };
 
@@ -345,7 +345,7 @@ Player.prototype.steer = function() {
                 this.targetTile.y += (3*pacman.fleeFrom.dir.y);
             }
             this.targetting = pacman.fleeFrom.name;
-            targetFruitAppropriately();
+            targetFruitAppropriately(this);
         }
         else if (shortestDistance > 75) {
             if (this.targetting != "huntingdots" ||
@@ -353,7 +353,7 @@ Player.prototype.steer = function() {
                 this.targetTile = findNearestDot(this.tile);
                 this.targetting = "huntingdots";
             }
-            targetFruitAppropriately();
+            targetFruitAppropriately(this);
         }
         else {
             this.targetting = false;
@@ -371,9 +371,12 @@ Player.prototype.steer = function() {
                     var potentialDirEnum = openDirEnums[index];
                     var potentialDirection = getDirFromEnum(potentialDirEnum);
                     var nextTile = {x: this.tile.x + potentialDirection.x, y: this.tile.y + potentialDirection.y};
+                    var oppositeTunnelTile = map.getOppositeTunnelTile(nextTile);
+                    if (oppositeTunnelTile) nextTile = oppositeTunnelTile;
 
                     var potentialRoute = _.extend(getOpenPathDistance(nextTile, potentialDirEnum, 1), {dirEnum: potentialDirEnum});
-                    calculateValue(potentialRoute);
+                    if (oppositeTunnelTile) potentialRoute.containsTunnel = true;
+                    calculateValue(potentialRoute, oppositeTunnelTile);
 
                     if (potentialDirEnum === this.prevBestRoute.dirEnum) {
                         this.prevBestRoute.value = potentialRoute.value;
@@ -441,7 +444,7 @@ Player.prototype.steer = function() {
 };
 
 var AIDepth = 15;
-var calculateValue = function(potentialRoute) {
+var calculateValue = function(potentialRoute, oppositeTunnel) {
     potentialRoute.value = potentialRoute.distance + potentialRoute.dots / 2;
     // use energizers when ghosts are close
     if (potentialRoute.energizer && (shortestDistance < 15 || this.numGhostsWithinA >= 2
@@ -467,6 +470,10 @@ var calculateValue = function(potentialRoute) {
     if (potentialRoute.dots === map.dotsLeft()) {
         potentialRoute.value += 500;
     }
+
+    if (potentialRoute.containsTunnel) {
+        potentialRoute.value += 2;
+    }
 };
 var getOpenPathDistance = function(tile, dirEnum, numSteps) {
     var intersectGhost = tileIntersectsGhostPaths(tile, numSteps)
@@ -483,8 +490,11 @@ var getOpenPathDistance = function(tile, dirEnum, numSteps) {
         var potentialDirEnum = openDirEnums[index];
         var potentialDirection = getDirFromEnum(potentialDirEnum);
         var nextTile = {x: tile.x + potentialDirection.x, y: tile.y + potentialDirection.y};
+        var oppositeTunnelTile = map.getOppositeTunnelTile(nextTile);
+        if (oppositeTunnelTile) nextTile = oppositeTunnelTile;
 
         var potentialRoute = getOpenPathDistance(nextTile, potentialDirEnum, numSteps + 1);
+        if (oppositeTunnelTile) potentialRoute.containsTunnel = true;
         calculateValue(potentialRoute);
         potentialRoutes.push(potentialRoute);
     }
@@ -500,6 +510,7 @@ var getOpenPathDistance = function(tile, dirEnum, numSteps) {
         energizer: map.isEnergizerTile(tile.x, tile.y) || bestRoute.energizer,
         fruit: fruitDistance || bestRoute.fruit,
         scaredGhostDistance: bestRoute.scaredGhostDistance,
+        containsTunnel : bestRoute.containsTunnel,
         targetTiles: [tile].concat(bestRoute.targetTiles)
     };
 };

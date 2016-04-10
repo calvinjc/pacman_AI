@@ -84,6 +84,8 @@ var myGetTurnClosestToTarget = function(tile, targetTile) {
     for (var index = 0; index < openDirEnums.length; index++) {
         var dir = getDirFromEnum(openDirEnums[index]);
         var nextTile = {x: tile.x + dir.x, y: tile.y + dir.y};
+        var oppositeTunnelTile = map.getOppositeTunnelTile(nextTile);
+        if (oppositeTunnelTile) nextTile = oppositeTunnelTile;
         var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], 0);
         if (option.distance < minDistance || (
             option.distance === minDistance && option.depth < minDepth)) {
@@ -110,6 +112,8 @@ var getShortestDistancePath = function(tile, targetTile, dirEnum, depth) {
     for (var index = 0; index < openDirEnums.length; index++) {
         var dir = getDirFromEnum(openDirEnums[index]);
         var nextTile = {x: tile.x + dir.x, y: tile.y + dir.y};
+        var oppositeTunnelTile = map.getOppositeTunnelTile(nextTile);
+        if (oppositeTunnelTile) nextTile = oppositeTunnelTile;
 
         var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], depth + 1);
         if (option.distance === 0) return option;
