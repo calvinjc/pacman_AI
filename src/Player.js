@@ -240,44 +240,52 @@ var findNearestDot = function(tile, options, recursive) {
         for (var index = 0; index <= radius; index++) {
             //up
             if (upY >= options.minY && upY <= options.maxY) {
-                if (map.isDotTile(tile.x + index, upY) && (tile.x + index) >= options.minX && (tile.x + index) <= options.maxX) {
+                if ((map.isDotTile(tile.x + index, upY) || map.isEnergizerTile(tile.x + index, upY))
+                    && (tile.x + index) >= options.minX && (tile.x + index) <= options.maxX) {
                     dotTile =  {x: tile.x + index, y: upY};
                     break;
                 }
-                if (map.isDotTile(tile.x - index, upY) && (tile.x - index) >= options.minX && (tile.x - index) <= options.maxX) {
+                if ((map.isDotTile(tile.x - index, upY) || map.isEnergizerTile(tile.x - index, upY))
+                    && (tile.x - index) >= options.minX && (tile.x - index) <= options.maxX) {
                     dotTile = {x: tile.x - index, y: upY};
                     break;
                 }
             }
             //right
             if (rightX >= options.minX && rightX <= options.maxX) {
-                if (map.isDotTile(rightX, tile.y - index) && (tile.y - index) >= options.minY && (tile.y - index) <= options.maxY) {
+                if ((map.isDotTile(rightX, tile.y - index) || map.isEnergizerTile(rightX, tile.y - index))
+                    && (tile.y - index) >= options.minY && (tile.y - index) <= options.maxY) {
                     dotTile = {x: rightX, y: tile.y - index};
                     break;
                 }
-                if (map.isDotTile(rightX, tile.y + index) && (tile.y + index) >= options.minY && (tile.y + index) <= options.maxY) {
+                if ((map.isDotTile(rightX, tile.y + index) || map.isEnergizerTile(rightX, tile.y + index))
+                    && (tile.y + index) >= options.minY && (tile.y + index) <= options.maxY) {
                     dotTile = {x: rightX, y: tile.y + index};
                     break;
                 }
             }
             //left
             if (leftX >= options.minX && leftX <= options.maxX) {
-                if (map.isDotTile(leftX, tile.y - index) && (tile.y - index) >= options.minY && (tile.y - index) <= options.maxY) {
+                if ((map.isDotTile(leftX, tile.y - index) || map.isEnergizerTile(rightX, tile.y - index))
+                    && (tile.y - index) >= options.minY && (tile.y - index) <= options.maxY) {
                     dotTile = {x: leftX, y: tile.y - index};
                     break;
                 }
-                if (map.isDotTile(leftX, tile.y + index) && (tile.y + index) >= options.minY && (tile.y + index) <= options.maxY) {
+                if ((map.isDotTile(leftX, tile.y + index) || map.isEnergizerTile(rightX, tile.y + index))
+                    && (tile.y + index) >= options.minY && (tile.y + index) <= options.maxY) {
                     dotTile = {x: leftX, y: tile.y + index};
                     break;
                 }
             }
             //down
             if (downY >= options.minY && downY <= options.maxY) {
-                if (map.isDotTile(tile.x + index, downY) && (tile.x + index) >= options.minX && (tile.x + index) <= options.maxX) {
+                if ((map.isDotTile(tile.x + index, downY) || map.isEnergizerTile(tile.x + index, downY))
+                    && (tile.x + index) >= options.minX && (tile.x + index) <= options.maxX) {
                     dotTile = {x: tile.x + index, y: downY};
                     break;
                 }
-                if (map.isDotTile(tile.x - index, downY) && (tile.x - index) >= options.minX && (tile.x - index) <= options.maxX) {
+                if ((map.isDotTile(tile.x - index, downY) || map.isEnergizerTile(tile.x - index, downY))
+                    && (tile.x - index) >= options.minX && (tile.x - index) <= options.maxX) {
                     dotTile = {x: tile.x - index, y: downY};
                     break;
                 }
