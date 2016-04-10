@@ -20,6 +20,8 @@ var Player = function() {
     this.savedStopped = {};
     this.savedEatPauseFramesLeft = {};
 
+    this.huntDotsThreshold = HuntDotsDistanceThreshold;
+
     this.prevBestRoute = { dirEnum: 0, distance: 0, dots: 0, energizer: 0, value: 0, fruit: 0, targetTiles: []};
 };
 
@@ -346,6 +348,7 @@ Player.prototype.steer = function() {
         setFleeFromTarget();
 
         if (pacman.fleeFrom.scared) {
+            this.huntDotsThreshold = HuntDotsDistanceThreshold;
             this.targetTile.x = pacman.fleeFrom.tile.x;
             this.targetTile.y = pacman.fleeFrom.tile.y;
             if (shortestDistance > 50) {
@@ -355,15 +358,17 @@ Player.prototype.steer = function() {
             this.targetting = pacman.fleeFrom.name;
             targetFruitAppropriately(this);
         }
-        else if (shortestDistance > 75) {
+        else if (shortestDistance > this.huntDotsThreshold) {
             if (this.targetting != "huntingdots" ||
                 (this.targetTile.x === this.tile.x && this.targetTile.y === this.tile.y)) {
+                this.huntDotsThreshold = HuntDotsDistanceThreshold - 5;
                 this.targetTile = findNearestDot(this.tile);
                 this.targetting = "huntingdots";
             }
             targetFruitAppropriately(this);
         }
         else {
+            this.huntDotsThreshold = HuntDotsDistanceThreshold;
             this.targetting = false;
 
             if (this.distToMid.x === 0 || this.distToMid.y === 0) {
@@ -451,7 +456,6 @@ Player.prototype.steer = function() {
     }
 };
 
-var AIDepth = 15;
 var calculateValue = function(potentialRoute, oppositeTunnel) {
     potentialRoute.value = potentialRoute.distance + potentialRoute.dots / 2;
     // use energizers when ghosts are close

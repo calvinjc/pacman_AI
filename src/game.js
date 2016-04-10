@@ -172,6 +172,10 @@ var clearCheats, backupCheats, restoreCheats;
 var NumStartingLives = 3;
 var ExtraLifeScore = 10000;
 
+// AI Settings
+var AIDepth = 15;
+var HuntDotsDistanceThreshold = 75;
+
 // current level, lives, and score
 var level = 1;
 var extraLives = 0;
