@@ -3,6 +3,7 @@
 
 window.addEventListener("load", function() {
     loadHighScores();
+	loadAISettings();
     initRenderer();
     atlas.create();
     initSwipe();
@@ -24,4 +25,17 @@ window.addEventListener("load", function() {
 		switchState(newGameState);
 	}
     executive.init();
+
+	$("#startingLives").val(NumStartingLives);
+	$("#extraLifeScore").val(ExtraLifeScore);
+
+	$("#restartBtn").click(function() {
+		var newSettings = {
+			numStartingLives: parseInt($("#startingLives").val()),
+			extraLifeScore: parseInt($("#extraLifeScore").val())
+		};
+
+		saveAISettings(newSettings);
+		switchState(newGameState);
+	});
 });

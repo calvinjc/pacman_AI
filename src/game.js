@@ -284,3 +284,16 @@ var saveHighScores = function() {
         localStorage.highScores = JSON.stringify(highScores);
     }
 };
+
+var loadAISettings = function() {
+    if (localStorage && localStorage.AISettings) {
+        var settings = JSON.parse(localStorage.AISettings);
+        if (settings.numStartingLives) NumStartingLives = settings.numStartingLives;
+        if (settings.extraLifeScore) ExtraLifeScore = settings.extraLifeScore;
+    }
+};
+var saveAISettings = function(settings) {
+    if (localStorage) {
+        localStorage.AISettings = JSON.stringify(settings);
+    }
+};
