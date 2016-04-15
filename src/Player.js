@@ -371,47 +371,44 @@ Player.prototype.steer = function() {
             this.huntDotsThreshold = HuntDotsDistanceThreshold;
             this.targetting = false;
 
-            if (this.distToMid.x === 0 || this.distToMid.y === 0) {
+            this.numGhostsWithinA = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 30; }).length;
+            this.numGhostsWithinB = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 40; }).length;
+            this.numGhostsWithinC = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 50; }).length;
 
-                this.numGhostsWithinA = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 30; }).length;
-                this.numGhostsWithinB = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 40; }).length;
-                this.numGhostsWithinC = _.filter(sortedDistances,  function(ghost){ return ghost.distance < 50; }).length;
+            calcAllGhostFutureTiles(0, 1, this.tile, getDirFromEnum(this.dirEnum));
+            var potentialRoutes = [];
+            var openDirEnums = getOpenDirEnums(this.tile, this.dirEnum);
+            for (var index = 0; index < openDirEnums.length; index++) {
+                var potentialDirEnum = openDirEnums[index];
+                var potentialDirection = getDirFromEnum(potentialDirEnum);
+                var nextTile = {x: this.tile.x + potentialDirection.x, y: this.tile.y + potentialDirection.y};
+                var oppositeTunnelTile = map.getOppositeTunnelTile(nextTile);
+                if (oppositeTunnelTile) nextTile = oppositeTunnelTile;
 
-                getAllGhostFutureTiles(AIDepth);
-                var potentialRoutes = [];
-                var openDirEnums = getOpenDirEnums(this.tile, this.dirEnum);
-                for (var index = 0; index < openDirEnums.length; index++) {
-                    var potentialDirEnum = openDirEnums[index];
-                    var potentialDirection = getDirFromEnum(potentialDirEnum);
-                    var nextTile = {x: this.tile.x + potentialDirection.x, y: this.tile.y + potentialDirection.y};
-                    var oppositeTunnelTile = map.getOppositeTunnelTile(nextTile);
-                    if (oppositeTunnelTile) nextTile = oppositeTunnelTile;
+                var potentialRoute = _.extend(getOpenPathDistance(nextTile, potentialDirEnum, 1), {dirEnum: potentialDirEnum});
+                if (oppositeTunnelTile) potentialRoute.containsTunnel = true;
+                calculateValue(potentialRoute, oppositeTunnelTile);
 
-                    var potentialRoute = _.extend(getOpenPathDistance(nextTile, potentialDirEnum, 1), {dirEnum: potentialDirEnum});
-                    if (oppositeTunnelTile) potentialRoute.containsTunnel = true;
-                    calculateValue(potentialRoute, oppositeTunnelTile);
-
-                    if (potentialDirEnum === this.prevBestRoute.dirEnum) {
-                        this.prevBestRoute.value = potentialRoute.value;
-                        this.prevBestRoute.targetTiles = potentialRoute.targetTiles;
-                    }
-
-                    potentialRoutes.push(potentialRoute);
+                if (potentialDirEnum === this.prevBestRoute.dirEnum) {
+                    this.prevBestRoute.value = potentialRoute.value;
+                    this.prevBestRoute.targetTiles = potentialRoute.targetTiles;
                 }
 
-                var bestRoute = _.max(potentialRoutes, function (route) { return route.value; });
-
-                if (bestRoute.value > this.prevBestRoute.value || !_.contains(openDirEnums, this.prevBestRoute.dirEnum)) {
-                    this.prevBestRoute = bestRoute;
-                    this.setNextDir(bestRoute.dirEnum);
-                    pacman.targetTiles = bestRoute.targetTiles;
-                }
-                else {
-                    this.setNextDir(this.prevBestRoute.dirEnum);
-                    pacman.targetTiles = this.prevBestRoute.targetTiles;
-                }
-                pacman.targetTile = {};
+                potentialRoutes.push(potentialRoute);
             }
+
+            var bestRoute = _.max(potentialRoutes, function (route) { return route.value; });
+
+            if (bestRoute.value > this.prevBestRoute.value || !_.contains(openDirEnums, this.prevBestRoute.dirEnum)) {
+                this.prevBestRoute = bestRoute;
+                this.setNextDir(bestRoute.dirEnum);
+                pacman.targetTiles = bestRoute.targetTiles;
+            }
+            else {
+                this.setNextDir(this.prevBestRoute.dirEnum);
+                pacman.targetTiles = this.prevBestRoute.targetTiles;
+            }
+            pacman.targetTile = {};
         }
 
         if (this.targetting) {
@@ -462,7 +459,7 @@ var calculateValue = function(potentialRoute, oppositeTunnel) {
     if (potentialRoute.energizer && (shortestDistance < 15 || this.numGhostsWithinA >= 2
         || this.numGhostsWithinB >= 3 || this.numGhostsWithinC === 4))
     {
-        potentialRoute.value += AIDepth;
+        potentialRoute.value = AIDepth + (AIDepth / 2);
     }
     //else if (potentialRoute.distance === AIDepth) {
     //    potentialRoute.value -= 3;
@@ -470,17 +467,17 @@ var calculateValue = function(potentialRoute, oppositeTunnel) {
 
     // target scared ghosts
     if (potentialRoute.scaredGhostDistance) {
-        potentialRoute.value += (AIDepth + (AIDepth - potentialRoute.scaredGhostDistance));
+        potentialRoute.value = (80 + (AIDepth - potentialRoute.scaredGhostDistance));
     }
 
     // get fruit while running away
     if (potentialRoute.fruit) {
-        potentialRoute.value += (AIDepth + (AIDepth - potentialRoute.fruit));
+        potentialRoute.value = (100 + (AIDepth - potentialRoute.fruit));
     }
 
     // if you can finish the map you don't have to escape the ghosts
     if (potentialRoute.dots === map.dotsLeft()) {
-        potentialRoute.value += 500;
+        potentialRoute.value = 500;
     }
 
     if (potentialRoute.containsTunnel) {
@@ -488,7 +485,8 @@ var calculateValue = function(potentialRoute, oppositeTunnel) {
     }
 };
 var getOpenPathDistance = function(tile, dirEnum, numSteps) {
-    var intersectGhost = tileIntersectsGhostPaths(tile, numSteps)
+    calcAllGhostFutureTiles(numSteps, 1, tile, getDirFromEnum(dirEnum));
+    var intersectGhost = tileIntersectsGhostPaths(tile, numSteps);
     if (numSteps > AIDepth || intersectGhost) {
         var scaredGhostDistance = intersectGhost.isScared ? intersectGhost.distance : 0;
 
@@ -547,28 +545,46 @@ var tileIntersectsGhostPaths = function(tile, numSteps) {
     return false;
 };
 
-var getAllGhostFutureTiles = function(numSteps) {
-    blinky.futureTiles = getGhostFutureTiles(blinky, numSteps);
-    pinky.futureTiles = getGhostFutureTiles(pinky, numSteps);
-    inky.futureTiles = getGhostFutureTiles(inky, numSteps);
-    clyde.futureTiles = getGhostFutureTiles(clyde, numSteps);
+var calcAllGhostFutureTiles = function(start, numSteps, pacmanTile, pacmanDir) {
+    calcGhostFutureTiles(blinky, start, numSteps, pacmanTile, pacmanDir);
+    calcGhostFutureTiles(pinky, start, numSteps, pacmanTile, pacmanDir);
+    calcGhostFutureTiles(inky, start, numSteps, pacmanTile, pacmanDir);
+    calcGhostFutureTiles(clyde, start, numSteps, pacmanTile, pacmanDir);
 };
 
-var getGhostFutureTiles = function(actor, numSteps) {
-    if (!(actor.mode === GHOST_OUTSIDE || actor.mode === GHOST_LEAVING_HOME)) return [];
+var calcGhostFutureTiles = function(actor, start, numSteps, pacmanTile, pacmanDir) {
+    if (start > 1 && actor.futureTiles.length !== start) {
+        actor.futureTiles = actor.futureTiles.slice(0, start);
+        actor.futureStates = actor.futureStates.slice(0, start);
+    }
+    
+    if (!(actor.mode === GHOST_OUTSIDE || actor.mode === GHOST_LEAVING_HOME)) {
+        actor.futureTiles = [];
+        actor.futureStates = [];
+        return;
+    }
+
+    if (start === 0) {
+        actor.futureTiles = [{x: actor.tile.x, y: actor.tile.y}];
+        actor.futureStates = [{
+            tile: {x: actor.tile.x, y: actor.tile.y},
+            dir: { x: actor.dir.x, y: actor.dir.y },
+            dirEnum: actor.dirEnum
+        }];
+    }
 
     // current state of the predicted path
-    var tile = { x: actor.tile.x, y: actor.tile.y};
-    var target = actor.targetTile;
-    var dir = { x: actor.dir.x, y: actor.dir.y };
-    var dirEnum = actor.dirEnum;
-    var openTiles;
+    var currentState = actor.futureStates[actor.futureStates.length-1];
+    var tile = _.clone(currentState.tile);
+    var dir = _.clone(currentState.dir);
+    var dirEnum = currentState.dirEnum;
 
-    var futureTiles = [_.clone(tile)];
+
+    var target = actor.getHypotheticalTargetTile(pacmanTile, pacmanDir);
 
     for (var index = 0; index < numSteps; index++) {
         // predict next turn from current tile
-        openTiles = getOpenTiles(tile, dirEnum);
+        var openTiles = getOpenTiles(tile, dirEnum);
         if (actor != pacman && map.constrainGhostTurns)
             map.constrainGhostTurns(tile, openTiles, dirEnum);
         dirEnum = getTurnClosestToTarget(tile, target, openTiles);
@@ -578,15 +594,17 @@ var getGhostFutureTiles = function(actor, numSteps) {
         tile.x += dir.x;
         tile.y += dir.y;
 
-        futureTiles.push(_.clone(tile));
-
+        actor.futureTiles.push(_.clone(tile));
+        actor.futureStates.push({
+            tile: _.clone(tile),
+            dir: _.clone(dir),
+            dirEnum: _.clone(dirEnum)
+        });
         // exit if we're already on the target
         if (tile.x == target.x && tile.y == target.y) {
             break;
         }
     }
-
-    return futureTiles;
 };
 
 // update this frame

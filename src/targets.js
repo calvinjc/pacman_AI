@@ -24,6 +24,9 @@ clyde.pathCenter = { x:2, y:2 };
 blinky.getTargetTile = function() {
     return { x: pacman.tile.x, y: pacman.tile.y };
 };
+blinky.getHypotheticalTargetTile = function(pacmanTile, pacmanDir) {
+    return { x: pacmanTile.x, y: pacmanTile.y };
+};
 blinky.getTargetPixel = function() {
     return { x: pacman.pixel.x, y: pacman.pixel.y };
 };
@@ -42,6 +45,15 @@ pinky.getTargetTile = function() {
     var px = pacman.tile.x + 4*pacman.dir.x;
     var py = pacman.tile.y + 4*pacman.dir.y;
     if (pacman.dirEnum == DIR_UP) {
+        px -= 4;
+    }
+    return { x : px, y : py };
+};
+pinky.getHypotheticalTargetTile = function(pacmanTile, pacmanDir) {
+    var px = pacmanTile.x + 4*pacmanDir.x;
+    var py = pacmanTile.y + 4*pacmanDir.y;
+    //if (pacman.dirEnum == DIR_UP) {
+    if (pacmanDir.x === 0 && pacmanDir.y === -1) {
         px -= 4;
     }
     return { x : px, y : py };
@@ -85,6 +97,19 @@ inky.getTargetTile = function() {
     return {
         x : blinky.tile.x + 2*(px - blinky.tile.x),
         y : blinky.tile.y + 2*(py - blinky.tile.y),
+    };
+};
+inky.getHypotheticalTargetTile = function(pacmanTile, pacmanDir) {
+    var px = pacmanTile.x + 2*pacmanDir.x;
+    var py = pacmanTile.y + 2*pacmanDir.y;
+    //if (pacman.dirEnum == DIR_UP) {
+    if (pacmanDir.x === 0 && pacmanDir.y === -1) {
+        px -= 2;
+    }
+    var blinkyTheoreticalTile = blinky.futureTiles[blinky.futureTiles.length-1] || blinky.tile;
+    return {
+        x : blinkyTheoreticalTile.x + 2*(px - blinkyTheoreticalTile.x),
+        y : blinkyTheoreticalTile.y + 2*(py - blinkyTheoreticalTile.y),
     };
 };
 inky.getJointPixel = function() {
@@ -150,6 +175,19 @@ clyde.getTargetTile = function() {
     if (dist >= 64) {
         this.targetting = 'pacman';
         return { x: pacman.tile.x, y: pacman.tile.y };
+    }
+    else {
+        this.targetting = 'corner';
+        return { x: this.cornerTile.x, y: this.cornerTile.y };
+    }
+};
+clyde.getHypotheticalTargetTile = function(pacmanTile, pacmanDir) {
+    var dx = pacmanTile.x - (this.tile.x + pacmanDir.x);
+    var dy = pacmanTile.y - (this.tile.y + pacmanDir.y);
+    var dist = dx*dx+dy*dy;
+    if (dist >= 64) {
+        this.targetting = 'pacman';
+        return { x: pacmanTile.x, y: pacmanTile.y };
     }
     else {
         this.targetting = 'corner';

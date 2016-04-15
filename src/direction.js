@@ -99,7 +99,7 @@ var myGetTurnClosestToTarget = function(tile, targetTile) {
 
 var getShortestDistancePath = function(tile, targetTile, dirEnum, depth) {
     if (tile.x === targetTile.x && tile.y === targetTile.y) return {distance: 0, depth: depth};
-    if (depth > 10) {
+    if (depth > 15) {
         var dx,dy,dist;                      // variables used for euclidean distance
         dx = tile.x - targetTile.x;
         dy = tile.y - targetTile.y;
