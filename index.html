@@ -53,6 +53,11 @@
         .settingsLabel {
             color: #9d9d9d;
         }
+        @media (min-width: 768px) {
+            .num-input {
+                width: 75px !important;
+            }
+        }
     </style>
 
     <link rel="stylesheet" type="text/css" href="libs/bootstrap/bootstrap.min.css">
@@ -128,6 +133,10 @@
                                     <option>20000</option>
                                     <option>30000</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="aiDepth" class="settingsLabel">AI Depth:</label>
+                                <input id="aiDepth" class="form-control num-input" type="number">
                             </div>
                             <button id="restartBtn" class="btn btn-default">Restart Game</button>
 

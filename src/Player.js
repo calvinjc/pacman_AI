@@ -415,7 +415,7 @@ Player.prototype.steer = function() {
             this.setNextDir(myGetTurnClosestToTarget(this.tile, this.targetTile));
         }
 
-        if (pathContainsEnergizer(this.tile, this.nextDir) && shortestDistance > 15 && map.dotsLeft() > 10) {
+        if (pathContainsEnergizer(this.tile, this.nextDir) && shortestDistance > 15 && map.dotsLeft() > 3) {
             var oppDirEnum = rotateAboutFace(this.dirEnum);
             this.setNextDir(oppDirEnum);
         }

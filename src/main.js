@@ -29,10 +29,13 @@ window.addEventListener("load", function() {
 	$("#startingLives").val(NumStartingLives);
 	$("#extraLifeScore").val(ExtraLifeScore);
 
+	$("#aiDepth").val(AIDepth);
+
 	$("#restartBtn").click(function() {
 		var newSettings = {
 			numStartingLives: parseInt($("#startingLives").val()),
-			extraLifeScore: parseInt($("#extraLifeScore").val())
+			extraLifeScore: parseInt($("#extraLifeScore").val()),
+			aiDepth: parseInt($("#aiDepth").val())
 		};
 
 		saveAISettings(newSettings);

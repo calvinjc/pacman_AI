@@ -290,6 +290,7 @@ var loadAISettings = function() {
         var settings = JSON.parse(localStorage.AISettings);
         if (settings.numStartingLives) NumStartingLives = settings.numStartingLives;
         if (settings.extraLifeScore) ExtraLifeScore = settings.extraLifeScore;
+        if (settings.aiDepth) AIDepth = settings.aiDepth;
     }
 };
 var saveAISettings = function(settings) {
