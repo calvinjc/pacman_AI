@@ -351,7 +351,7 @@ Map.prototype.getOppositeTunnelTile = function(tile) {
             oppositeTile.x = (mapWidth_Tile + 1);
             return oppositeTile;
         }
-        else if (tile.x > (mapWidth_Tile + 1)) {
+        else if (tile.x >= (mapWidth_Tile + 1)) {
             oppositeTile.x = -1;
             return oppositeTile;
         }

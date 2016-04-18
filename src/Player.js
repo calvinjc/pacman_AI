@@ -220,7 +220,7 @@ var isThereAnEnergizerAnyDirection = function(tile) {
     return {dirEnum: -1};
 };
 
-var findNearestDot = function(tile, options, recursive) {
+var findNearestDot = function(tile, player, options, recursive) {
     var dotTile = {x:-1, y:-1};
     if (!options) {
         options = {minX: 0, maxX: mapWidth_Tile, minY: 0, maxY: mapHeight_Tile};
@@ -300,6 +300,7 @@ var findNearestDot = function(tile, options, recursive) {
     // find a different Target
     var energizer = isThereAnEnergizerAnyDirection(dotTile);
     if (energizer.dirEnum > -1 && map.dotsLeft() > 10 && !recursive) {
+        player.avoidThisTileWhileFindingBestRoute = _.clone(energizer.energizerTile);
         options = {};
         //left half
         if (energizer.energizerTile.x < (mapWidth_Tile/2)) {
@@ -317,7 +318,7 @@ var findNearestDot = function(tile, options, recursive) {
             options.maxY = energizer.energizerTile.y -3;
         }
 
-        return findNearestDot(tile, options, true)
+        return findNearestDot(tile, player, options, true);
     }
     return dotTile;
 };
@@ -355,17 +356,26 @@ Player.prototype.steer = function() {
                 this.targetTile.x += (3*pacman.fleeFrom.dir.x);
                 this.targetTile.y += (3*pacman.fleeFrom.dir.y);
             }
-            this.targetting = pacman.fleeFrom.name;
+            if (this.targetting !== pacman.fleeFrom.name) {
+                this.targetting = pacman.fleeFrom.name;
+                this.avoidThisTileWhileFindingBestRoute = undefined;
+            }
             targetFruitAppropriately(this);
+
+            this.setNextDir(myGetTurnClosestToTarget(this));
         }
         else if (shortestDistance > this.huntDotsThreshold) {
             if (this.targetting != "huntingdots" ||
                 (this.targetTile.x === this.tile.x && this.targetTile.y === this.tile.y)) {
+                this.avoidThisTileWhileFindingBestRoute = undefined;
                 this.huntDotsThreshold = HuntDotsDistanceThreshold - 5;
-                this.targetTile = findNearestDot(this.tile);
+
+                this.targetTile = findNearestDot(this.tile, this);
                 this.targetting = "huntingdots";
             }
             targetFruitAppropriately(this);
+
+            this.setNextDir(myGetTurnClosestToTarget(this));
         }
         else {
             this.huntDotsThreshold = HuntDotsDistanceThreshold;
@@ -409,10 +419,6 @@ Player.prototype.steer = function() {
                 pacman.targetTiles = this.prevBestRoute.targetTiles;
             }
             pacman.targetTile = {};
-        }
-
-        if (this.targetting) {
-            this.setNextDir(myGetTurnClosestToTarget(this.tile, this.targetTile));
         }
 
         if (pathContainsEnergizer(this.tile, this.nextDir) && shortestDistance > 15 && map.dotsLeft() > 3) {
