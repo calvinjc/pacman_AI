@@ -30,12 +30,14 @@ window.addEventListener("load", function() {
 	$("#extraLifeScore").val(ExtraLifeScore);
 
 	$("#aiDepth").val(AIDepth);
+    $("#playManually").prop('checked', !AutoPilot);
 
 	$("#restartBtn").click(function() {
 		var newSettings = {
 			numStartingLives: parseInt($("#startingLives").val()),
 			extraLifeScore: parseInt($("#extraLifeScore").val()),
-			aiDepth: parseInt($("#aiDepth").val())
+			aiDepth: parseInt($("#aiDepth").val()),
+			autoPilot: !$("#playManually").is(':checked')
 		};
 
 		saveAISettings(newSettings);

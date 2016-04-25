@@ -171,6 +171,7 @@ var clearCheats, backupCheats, restoreCheats;
 // Default settings
 var NumStartingLives = 3;
 var ExtraLifeScore = 10000;
+var AutoPilot = true;
 
 // AI Settings
 var AIDepth = 15;
@@ -291,6 +292,7 @@ var loadAISettings = function() {
         if (settings.numStartingLives) NumStartingLives = settings.numStartingLives;
         if (settings.extraLifeScore) ExtraLifeScore = settings.extraLifeScore;
         if (settings.aiDepth) AIDepth = settings.aiDepth;
+        if (settings.autoPilot !== undefined) AutoPilot = settings.autoPilot;
     }
 };
 var saveAISettings = function(settings) {

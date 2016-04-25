@@ -365,7 +365,7 @@ Player.prototype.steer = function() {
             this.setNextDir(myGetTurnClosestToTarget(this));
         }
         else if (shortestDistance > this.huntDotsThreshold) {
-            if (this.targetting != "huntingdots" ||
+            if (!AutoPilot || this.targetting != "huntingdots" ||
                 (this.targetTile.x === this.tile.x && this.targetTile.y === this.tile.y)) {
                 this.avoidThisTileWhileFindingBestRoute = undefined;
                 this.huntDotsThreshold = HuntDotsDistanceThreshold - 5;
@@ -427,7 +427,7 @@ Player.prototype.steer = function() {
         }
 
         var nextDirOpen = isNextTileFloor(this.tile, this.nextDir);
-        if (nextDirOpen) {
+        if (AutoPilot && nextDirOpen) {
             this.setDir(this.nextDirEnum);
         }
     }

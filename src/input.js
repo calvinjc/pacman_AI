@@ -189,6 +189,12 @@
     addKeyDown(KEY_O, function() { turboMode = !turboMode; }, isPracticeMode);
     addKeyDown(KEY_P, function() { pacman.ai = !pacman.ai; }, isPracticeMode);
 
+    var always = function() { return true; };
+    addKeyDown(KEY_SPACE, function() {
+        AutoPilot = !AutoPilot;
+        $("#playManually").prop('checked', !AutoPilot);
+    }, always);
+
     addKeyDown(KEY_END, function() { executive.togglePause(); });
 
 })();
