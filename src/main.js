@@ -30,20 +30,40 @@ window.addEventListener("load", function() {
 	$("#extraLifeScore").val(ExtraLifeScore);
 
 	$("#aiDepth").val(AIDepth);
+	$("#showPacmanPath").prop('checked', ShowPacmanPath);
+	$("#showGhostPaths").prop('checked', ShowGhostPaths);
     $("#playManually").prop('checked', !AutoPilot);
 	if (/Mobi/.test(navigator.userAgent)) {
 		$("#play-manually-group").hide();
 	}
 
-	$("#restartBtn").click(function() {
-		var newSettings = {
-			numStartingLives: parseInt($("#startingLives").val()),
-			extraLifeScore: parseInt($("#extraLifeScore").val()),
-			aiDepth: parseInt($("#aiDepth").val()),
-			autoPilot: !$("#playManually").is(':checked')
-		};
+	$("#aiDepth").change(function() {
+		AIDepth = parseInt($("#aiDepth").val());
+		saveAISettings();
+	});
 
-		saveAISettings(newSettings);
+	$("#showPacmanPath").click(function() {
+		ShowPacmanPath = $("#showPacmanPath").is(':checked');
+		saveAISettings();
+	});
+
+	$("#showGhostPaths").click(function() {
+		ShowGhostPaths = $("#showGhostPaths").is(':checked');
+		saveAISettings();
+
+		blinky.isDrawPath = ShowGhostPaths;
+		pinky.isDrawPath = ShowGhostPaths;
+		inky.isDrawPath = ShowGhostPaths;
+		clyde.isDrawPath = ShowGhostPaths;
+	});
+
+	$("#playManually").click(function() {
+		AutoPilot = !$("#playManually").is(':checked');
+		saveAISettings();
+	});
+
+	$("#restartBtn").click(function() {
+		saveAISettings();
 		switchState(newGameState);
 	});
 });

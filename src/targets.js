@@ -250,12 +250,14 @@ pacman.drawTarget = function(ctx) {
         pacman.targetTiles.push(pacman.targetTile);
     }
 
-    _.each(pacman.targetTiles, function(targetTile) {
-        var targetPixel = {};
-        targetPixel.x = targetTile.x * tileSize + midTile.x;
-        targetPixel.y = targetTile.y * tileSize + midTile.y;
-        renderer.drawCenterPixelSq(ctx, targetPixel.x, targetPixel.y, targetSize);
-    });
+    if (ShowPacmanPath) {
+        _.each(pacman.targetTiles, function (targetTile) {
+            var targetPixel = {};
+            targetPixel.x = targetTile.x * tileSize + midTile.x;
+            targetPixel.y = targetTile.y * tileSize + midTile.y;
+            renderer.drawCenterPixelSq(ctx, targetPixel.x, targetPixel.y, targetSize);
+        });
+    }
 
     pacman.targetTiles = [];
 };

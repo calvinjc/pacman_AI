@@ -178,11 +178,11 @@
     addKeyDown(KEY_T, function() { pacman.isDrawTarget = !pacman.isDrawTarget; }, isPracticeMode);
 
     // Draw Actor Paths
-    addKeyDown(KEY_A, function() { blinky.isDrawPath = !blinky.isDrawPath; }, isPracticeMode);
-    addKeyDown(KEY_S, function() { pinky.isDrawPath = !pinky.isDrawPath; }, isPracticeMode);
-    addKeyDown(KEY_D, function() { inky.isDrawPath = !inky.isDrawPath; }, isPracticeMode);
-    addKeyDown(KEY_F, function() { clyde.isDrawPath = !clyde.isDrawPath; }, isPracticeMode);
-    addKeyDown(KEY_G, function() { pacman.isDrawPath = !pacman.isDrawPath; }, isPracticeMode);
+    addKeyDown(KEY_A, function() { blinky.isDrawPath = !blinky.isDrawPath; }, always);
+    addKeyDown(KEY_S, function() { pinky.isDrawPath = !pinky.isDrawPath; }, always);
+    addKeyDown(KEY_D, function() { inky.isDrawPath = !inky.isDrawPath; }, always);
+    addKeyDown(KEY_F, function() { clyde.isDrawPath = !clyde.isDrawPath; }, always);
+    addKeyDown(KEY_G, function() { pacman.isDrawPath = !pacman.isDrawPath; }, always);
 
     // Miscellaneous Cheats
     addKeyDown(KEY_I, function() { pacman.invincible = !pacman.invincible; }, isPracticeMode);

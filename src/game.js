@@ -171,6 +171,8 @@ var clearCheats, backupCheats, restoreCheats;
 // Default settings
 var NumStartingLives = 3;
 var ExtraLifeScore = 10000;
+var ShowPacmanPath = false;
+var ShowGhostPaths = false;
 var AutoPilot = true;
 
 // AI Settings
@@ -292,11 +294,26 @@ var loadAISettings = function() {
         if (settings.numStartingLives) NumStartingLives = settings.numStartingLives;
         if (settings.extraLifeScore) ExtraLifeScore = settings.extraLifeScore;
         if (settings.aiDepth) AIDepth = settings.aiDepth;
+        if (settings.showPacmanPath !== undefined) ShowPacmanPath = settings.showPacmanPath;
+        if (settings.showGhostPaths !== undefined) ShowGhostPaths = settings.showGhostPaths;
         if (settings.autoPilot !== undefined) AutoPilot = settings.autoPilot;
     }
+
+    blinky.isDrawPath = ShowGhostPaths;
+    pinky.isDrawPath = ShowGhostPaths;
+    inky.isDrawPath = ShowGhostPaths;
+    clyde.isDrawPath = ShowGhostPaths;
 };
-var saveAISettings = function(settings) {
+var saveAISettings = function() {
     if (localStorage) {
-        localStorage.AISettings = JSON.stringify(settings);
+        var newSettings = {
+            numStartingLives: parseInt($("#startingLives").val()),
+            extraLifeScore: parseInt($("#extraLifeScore").val()),
+            aiDepth: parseInt($("#aiDepth").val()),
+            showPacmanPath: $("#showPacmanPath").is(':checked'),
+            showGhostPaths: $("#showGhostPaths").is(':checked'),
+            autoPilot: !$("#playManually").is(':checked')
+        };
+        localStorage.AISettings = JSON.stringify(newSettings);
     }
 };
