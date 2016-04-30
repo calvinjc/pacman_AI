@@ -6,7 +6,7 @@ window.addEventListener("load", function() {
 	loadAISettings();
     initRenderer();
     atlas.create();
-    initSwipe();
+    //initSwipe();
 	var anchor = window.location.hash.substring(1);
 	if (anchor == "learn") {
 		switchState(learnState);
@@ -31,6 +31,9 @@ window.addEventListener("load", function() {
 
 	$("#aiDepth").val(AIDepth);
     $("#playManually").prop('checked', !AutoPilot);
+	if (/Mobi/.test(navigator.userAgent)) {
+		$("#play-manually-group").hide();
+	}
 
 	$("#restartBtn").click(function() {
 		var newSettings = {

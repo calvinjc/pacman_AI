@@ -6,9 +6,7 @@
     <title>Pac-Man</title>
 
     <!-- Lock viewport on mobile devices. -->
-    <!--
-    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" />
-    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 
     <!-- Allow page to be saved as web app on iOS. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -52,6 +50,11 @@
         }
         .settingsLabel {
             color: #9d9d9d;
+        }
+        @media (max-width: 768px) {
+            #canvas {
+                margin-top: 50px;
+            }
         }
         @media (min-width: 768px) {
             .num-input {
@@ -138,7 +141,7 @@
                                 <label for="aiDepth" class="settingsLabel">AI Depth:</label>
                                 <input id="aiDepth" class="form-control num-input" type="number">
                             </div>
-                            <div class="form-group">
+                            <div id="play-manually-group" class="form-group">
                                 <label for="playManually" class="settingsLabel">Play With Assistance</label>
                                 <input type="checkbox" id="playManually" name="playManually">
                             </div>
