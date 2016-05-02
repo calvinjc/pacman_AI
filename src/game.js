@@ -171,6 +171,13 @@ var clearCheats, backupCheats, restoreCheats;
 // Default settings
 var NumStartingLives = 3;
 var ExtraLifeScore = 10000;
+var ShowPacmanPath = false;
+var ShowGhostPaths = false;
+var AutoPilot = true;
+
+// AI Settings
+var AIDepth = 15;
+var HuntDotsDistanceThreshold = 75;
 
 // current level, lives, and score
 var level = 1;
@@ -278,5 +285,35 @@ var loadHighScores = function() {
 var saveHighScores = function() {
     if (localStorage) {
         localStorage.highScores = JSON.stringify(highScores);
+    }
+};
+
+var loadAISettings = function() {
+    if (localStorage && localStorage.AISettings) {
+        var settings = JSON.parse(localStorage.AISettings);
+        if (settings.numStartingLives) NumStartingLives = settings.numStartingLives;
+        if (settings.extraLifeScore) ExtraLifeScore = settings.extraLifeScore;
+        if (settings.aiDepth) AIDepth = settings.aiDepth;
+        if (settings.showPacmanPath !== undefined) ShowPacmanPath = settings.showPacmanPath;
+        if (settings.showGhostPaths !== undefined) ShowGhostPaths = settings.showGhostPaths;
+        if (settings.autoPilot !== undefined) AutoPilot = settings.autoPilot;
+    }
+
+    blinky.isDrawPath = ShowGhostPaths;
+    pinky.isDrawPath = ShowGhostPaths;
+    inky.isDrawPath = ShowGhostPaths;
+    clyde.isDrawPath = ShowGhostPaths;
+};
+var saveAISettings = function() {
+    if (localStorage) {
+        var newSettings = {
+            numStartingLives: parseInt($("#startingLives").val()),
+            extraLifeScore: parseInt($("#extraLifeScore").val()),
+            aiDepth: parseInt($("#aiDepth").val()),
+            showPacmanPath: $("#showPacmanPath").is(':checked'),
+            showGhostPaths: $("#showGhostPaths").is(':checked'),
+            autoPilot: !$("#playManually").is(':checked')
+        };
+        localStorage.AISettings = JSON.stringify(newSettings);
     }
 };

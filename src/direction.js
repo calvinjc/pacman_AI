@@ -76,28 +76,38 @@ var getTurnClosestToTarget = function(tile,targetTile,openTiles) {
     return dirEnum;
 };
 
-var myGetTurnClosestToTarget = function(tile, targetTile) {
+var myGetTurnClosestToTarget = function(player) {
     var minDistance = Infinity;
     var minDepth = Infinity;
     var bestDirEnum = 0;
-    var openDirEnums = getOpenDirEnums(tile, 0);
+    var amIonATunnelBorder = map.getOppositeTunnelTile(player.tile);
+    if (amIonATunnelBorder) {
+        player.avoidThisTileWhileFindingBestRoute = _.clone(player.tile);
+    }
+    var openDirEnums = getOpenDirEnums(player.tile, player.dirEnum, amIonATunnelBorder);
     for (var index = 0; index < openDirEnums.length; index++) {
         var dir = getDirFromEnum(openDirEnums[index]);
-        var nextTile = {x: tile.x + dir.x, y: tile.y + dir.y};
-        var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], 0);
-        if (option.distance < minDistance || (
-            option.distance === minDistance && option.depth < minDepth)) {
-            minDistance = option.distance;
-            minDepth = option.depth;
-            bestDirEnum = openDirEnums[index];
+        var nextTile = {x: player.tile.x + dir.x, y: player.tile.y + dir.y};
+        if (!player.avoidThisTileWhileFindingBestRoute || nextTile.x !== player.avoidThisTileWhileFindingBestRoute.x
+            || nextTile.y !== player.avoidThisTileWhileFindingBestRoute.y)
+        {
+            var oppositeTunnelTile = map.getOppositeTunnelTile(nextTile);
+            if (oppositeTunnelTile) nextTile = oppositeTunnelTile;
+            var option = getShortestDistancePath(nextTile, player.targetTile, openDirEnums[index], 0, player);
+            if (option.distance < minDistance || (
+                option.distance === minDistance && option.depth < minDepth)) {
+                minDistance = option.distance;
+                minDepth = option.depth;
+                bestDirEnum = openDirEnums[index];
+            }
         }
     }
     return bestDirEnum;
 };
 
-var getShortestDistancePath = function(tile, targetTile, dirEnum, depth) {
+var getShortestDistancePath = function(tile, targetTile, dirEnum, depth, player) {
     if (tile.x === targetTile.x && tile.y === targetTile.y) return {distance: 0, depth: depth};
-    if (depth > 10) {
+    if (depth > 15) {
         var dx,dy,dist;                      // variables used for euclidean distance
         dx = tile.x - targetTile.x;
         dy = tile.y - targetTile.y;
@@ -110,11 +120,16 @@ var getShortestDistancePath = function(tile, targetTile, dirEnum, depth) {
     for (var index = 0; index < openDirEnums.length; index++) {
         var dir = getDirFromEnum(openDirEnums[index]);
         var nextTile = {x: tile.x + dir.x, y: tile.y + dir.y};
+        if (!player.avoidThisTileWhileFindingBestRoute || nextTile.x !== player.avoidThisTileWhileFindingBestRoute.x
+            || nextTile.y !== player.avoidThisTileWhileFindingBestRoute.y) {
+            var oppositeTunnelTile = map.getOppositeTunnelTile(nextTile);
+            if (oppositeTunnelTile) nextTile = oppositeTunnelTile;
 
-        var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], depth + 1);
-        if (option.distance === 0) return option;
-        if (option.distance < minDistance) {
-            minDistance = option.distance;
+            var option = getShortestDistancePath(nextTile, targetTile, openDirEnums[index], depth + 1, player);
+            if (option.distance === 0) return option;
+            if (option.distance < minDistance) {
+                minDistance = option.distance;
+            }
         }
     }
 
