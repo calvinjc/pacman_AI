@@ -32,6 +32,10 @@ window.addEventListener("load", function() {
 	$("#aiDepth").val(AIDepth);
 	$("#showPacmanPath").prop('checked', ShowPacmanPath);
 	$("#showGhostPaths").prop('checked', ShowGhostPaths);
+	blinky.isDrawPath = ShowGhostPaths;
+	pinky.isDrawPath = ShowGhostPaths;
+	inky.isDrawPath = ShowGhostPaths;
+	clyde.isDrawPath = ShowGhostPaths;
     $("#playManually").prop('checked', !AutoPilot);
 	if (/Mobi/.test(navigator.userAgent)) {
 		$("#play-manually-group").hide();

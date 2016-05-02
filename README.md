@@ -24,3 +24,6 @@ Determine a value for each potential route that incorporates the number of dots/
 
 #### Version 4.5
 Render a visualization of the route that Pacman has selected.  This allows you to see in real time what Pacman is thinking.  This looks pretty cool and is also useful while debugging.  I had more planned but I wanted to get this out quicker. I called it a .5 version because the gameplay hasn't changed significantly.  I also changed the number of starting lives back to 3 with the extra life at 10000 pts because these are the game defaults and it demos better.
+
+#### Version 5.0
+Improve recursive searching by calculating future ghost positions based on the hypothetical Pacman future position, and various other value adjustment changes.  Make hunting dots more efficient and don't waste time twitching near an energizer when no ghosts are around.  Start making better use of the tunnels!  Target scared ghosts while running away from live ghosts.  Allow user to choose their own settings instead of having them hard coded!  Create a new mode where users can play the game themselves while still seeing the AI's recommended route!! This mode can be selected in the settings or can be toggled mid-game by pressing the Spacebar key.  This mode is only compatible/enabled on desktop browsers due to conflicts with swipe actions on mobile.
